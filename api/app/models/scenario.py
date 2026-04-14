@@ -12,7 +12,9 @@ class Scenario(Base):
     slug: Mapped[str] = mapped_column(String(100), unique=True, index=True)
     title: Mapped[str] = mapped_column(String(255))
     description: Mapped[str] = mapped_column(Text)
+    language_code: Mapped[str] = mapped_column(String(10))
     difficulty: Mapped[str] = mapped_column(String(50))
+    mode: Mapped[str] = mapped_column(String(20), default="guided")
     system_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 
