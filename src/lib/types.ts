@@ -16,6 +16,8 @@ export type Country = CountryName | null;
 export interface SelectedScenario {
   id: number;
   title: string;
+  language_code: string;
+  mode: string;
 }
 
 export interface CountryApiItem {
@@ -32,7 +34,9 @@ export interface ScenarioApiItem {
   slug: string;
   title: string;
   description: string;
+  language_code: string;
   difficulty: string;
+  mode: string;
   is_active: boolean;
 }
 
@@ -70,4 +74,11 @@ export interface UserProfileUpdatePayload {
   native_language?: string | null;
   target_language?: string | null;
   level?: string | null;
+}
+
+export interface UserLanguageLevelApiResponse {
+  id: string;
+  user_id: string;
+  language_code: string;
+  level: string;
 }

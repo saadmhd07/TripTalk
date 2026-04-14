@@ -5,6 +5,8 @@ interface LevelSelectionProps {
   onSelect: (level: 'Débutant' | 'Intermédiaire' | 'Avancé') => void;
   isSaving?: boolean;
   error?: string | null;
+  languageLabel?: string;
+  scenarioTitle?: string;
 }
 
 export function LevelSelection({
@@ -12,6 +14,8 @@ export function LevelSelection({
   onSelect,
   isSaving = false,
   error = null,
+  languageLabel,
+  scenarioTitle,
 }: LevelSelectionProps) {
   const levels = [
     {
@@ -48,7 +52,9 @@ export function LevelSelection({
             Choisis ton niveau
           </h2>
           <p className="text-gray-500 text-xl">
-            Tu pourras toujours le modifier plus tard
+            {languageLabel
+              ? `Niveau pour ${languageLabel}${scenarioTitle ? ` • ${scenarioTitle}` : ''}`
+              : 'Tu pourras toujours le modifier plus tard'}
           </p>
         </div>
         

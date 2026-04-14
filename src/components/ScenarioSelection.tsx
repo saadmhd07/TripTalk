@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 
-import { scenarioPresentation } from '../lib/presentation';
+import { getLanguageLabel, scenarioPresentation } from '../lib/presentation';
 import { fetchCountryScenarios } from '../lib/triptalk-api';
 import type { CountryName, ScenarioApiItem } from '../lib/types';
 
 interface ScenarioSelectionProps {
   country: CountryName;
   countryId: number;
-  onSelect: (scenario: { id: number; title: string }) => Promise<void>;
+  onSelect: (scenario: ScenarioApiItem) => Promise<void>;
 }
 
 export function ScenarioSelection({ country, countryId, onSelect }: ScenarioSelectionProps) {
@@ -45,7 +45,7 @@ export function ScenarioSelection({ country, countryId, onSelect }: ScenarioSele
   async function handleSelect(scenario: ScenarioApiItem) {
     setSubmittingTitle(scenario.title);
     try {
-      await onSelect({ id: scenario.id, title: scenario.title });
+      await onSelect(scenario);
     } finally {
       setSubmittingTitle(null);
     }
@@ -82,14 +82,20 @@ export function ScenarioSelection({ country, countryId, onSelect }: ScenarioSele
                     </div>
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-2xl mb-2">
-                      {scenario.title}
-                    </h3>
+                    <div className="mb-3 flex flex-wrap items-center gap-3">
+                      <h3 className="text-2xl">{scenario.title}</h3>
+                      <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-medium uppercase tracking-wide text-gray-600">
+                        {scenario.mode === 'free' ? 'Libre' : 'Guidé'}
+                      </span>
+                      <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-medium text-gray-600">
+                        {getLanguageLabel(scenario.language_code)}
+                      </span>
+                    </div>
                     <p className="text-gray-600 text-lg">
                       {scenario.description}
                     </p>
                     {submittingTitle === scenario.title && (
-                      <p className="mt-3 text-sm text-gray-500">Création de la session...</p>
+                      <p className="mt-3 text-sm text-gray-500">Chargement du niveau et création de la session...</p>
                     )}
                   </div>
                 </div>

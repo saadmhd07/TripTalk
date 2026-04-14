@@ -4,6 +4,7 @@ import type {
   FeedbackApiResponse,
   MessageApiItem,
   ScenarioApiItem,
+  UserLanguageLevelApiResponse,
   UserProfileApiResponse,
   UserProfileUpdatePayload,
 } from './types';
@@ -24,10 +25,13 @@ export async function fetchCountryScenarios(countryId: number): Promise<Scenario
   return response.json();
 }
 
-export async function createConversationSession(scenarioId: number): Promise<{ id: string }> {
+export async function createConversationSession(
+  scenarioId: number,
+  levelAtStart?: string | null
+): Promise<{ id: string }> {
   const response = await apiFetch('/conversation-sessions', {
     method: 'POST',
-    body: JSON.stringify({ scenario_id: scenarioId }),
+    body: JSON.stringify({ scenario_id: scenarioId, level_at_start: levelAtStart ?? null }),
   });
   if (!response.ok) {
     throw new Error('Failed to create conversation session');
@@ -82,6 +86,30 @@ export async function updateMyProfile(
   });
   if (!response.ok) {
     throw new Error('Failed to update user profile');
+  }
+  return response.json();
+}
+
+export async function fetchMyLanguageLevel(
+  languageCode: string
+): Promise<UserLanguageLevelApiResponse | null> {
+  const response = await apiFetch(`/me/language-levels/${languageCode}`);
+  if (!response.ok) {
+    throw new Error('Failed to load language level');
+  }
+  return response.json();
+}
+
+export async function updateMyLanguageLevel(
+  languageCode: string,
+  level: string
+): Promise<UserLanguageLevelApiResponse> {
+  const response = await apiFetch(`/me/language-levels/${languageCode}`, {
+    method: 'PUT',
+    body: JSON.stringify({ level }),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update language level');
   }
   return response.json();
 }
