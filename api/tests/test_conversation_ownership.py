@@ -52,7 +52,9 @@ def seed_owned_and_foreign_sessions() -> tuple[str, str]:
             slug="airport-checkin",
             title="Airport Check-in",
             description="Practice checking in at the airport.",
+            language_code="es",
             difficulty="beginner",
+            mode="guided",
             system_prompt="Help the learner practice airport check-in.",
             is_active=True,
         )
