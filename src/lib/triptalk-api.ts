@@ -1,0 +1,64 @@
+import { apiFetch } from './api';
+import type {
+  CountryApiItem,
+  FeedbackApiResponse,
+  MessageApiItem,
+  ScenarioApiItem,
+} from './types';
+
+export async function fetchCountries(): Promise<CountryApiItem[]> {
+  const response = await apiFetch('/countries');
+  if (!response.ok) {
+    throw new Error('Failed to load countries');
+  }
+  return response.json();
+}
+
+export async function fetchCountryScenarios(countryId: number): Promise<ScenarioApiItem[]> {
+  const response = await apiFetch(`/countries/${countryId}/scenarios`);
+  if (!response.ok) {
+    throw new Error('Failed to load scenarios');
+  }
+  return response.json();
+}
+
+export async function createConversationSession(scenarioId: number): Promise<{ id: string }> {
+  const response = await apiFetch('/conversation-sessions', {
+    method: 'POST',
+    body: JSON.stringify({ scenario_id: scenarioId }),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to create conversation session');
+  }
+  return response.json();
+}
+
+export async function fetchConversationMessages(sessionId: string): Promise<MessageApiItem[]> {
+  const response = await apiFetch(`/conversation-sessions/${sessionId}/messages`);
+  if (!response.ok) {
+    throw new Error('Failed to load messages');
+  }
+  return response.json();
+}
+
+export async function sendConversationMessage(
+  sessionId: string,
+  content: string
+): Promise<MessageApiItem[]> {
+  const response = await apiFetch(`/conversation-sessions/${sessionId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ content }),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to send message');
+  }
+  return response.json();
+}
+
+export async function fetchSessionFeedback(sessionId: string): Promise<FeedbackApiResponse> {
+  const response = await apiFetch(`/conversation-sessions/${sessionId}/feedback`);
+  if (!response.ok) {
+    throw new Error('Failed to load feedback');
+  }
+  return response.json();
+}

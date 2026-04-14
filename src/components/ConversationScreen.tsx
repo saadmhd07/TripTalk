@@ -1,10 +1,12 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Lightbulb, Send, Target, TrendingUp } from 'lucide-react';
 
-import { apiFetch } from '../lib/api';
+import { conversationAvatarPresentation } from '../lib/presentation';
+import { fetchConversationMessages, sendConversationMessage } from '../lib/triptalk-api';
+import type { CountryName, MessageApiItem } from '../lib/types';
 
 interface ConversationScreenProps {
-  country: 'Chile' | 'USA';
+  country: CountryName;
   scenario: string;
   sessionId: string;
   onFeedback: () => void;
@@ -15,37 +17,13 @@ interface Message {
   text: string;
 }
 
-interface MessageApiItem {
-  id: string;
-  session_id: string;
-  role: 'user' | 'assistant' | 'system';
-  content: string;
-  created_at: string;
-}
-
 export function ConversationScreen({ country, scenario, sessionId, onFeedback }: ConversationScreenProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const avatarInfo = {
-    Chile: {
-      name: 'Matías',
-      emoji: '👨🏻',
-      bgColor: 'bg-gradient-to-br from-red-400 to-blue-500',
-      role: 'Guide local chilien'
-    },
-    USA: {
-      name: 'Emily',
-      emoji: '👩🏼',
-      bgColor: 'bg-gradient-to-br from-blue-500 to-red-400',
-      role: 'Guide locale américaine'
-    }
-  };
-
-  const avatar = avatarInfo[country];
+  const avatar = conversationAvatarPresentation[country];
 
   useEffect(() => {
     let ignore = false;
@@ -55,12 +33,7 @@ export function ConversationScreen({ country, scenario, sessionId, onFeedback }:
       setError(null);
 
       try {
-        const response = await apiFetch(`/conversation-sessions/${sessionId}/messages`);
-        if (!response.ok) {
-          throw new Error('Failed to load messages');
-        }
-
-        const data: MessageApiItem[] = await response.json();
+        const data = await fetchConversationMessages(sessionId);
         if (!ignore) {
           if (data.length === 0) {
             setMessages([
@@ -110,16 +83,7 @@ export function ConversationScreen({ country, scenario, sessionId, onFeedback }:
     setError(null);
 
     try {
-      const response = await apiFetch(`/conversation-sessions/${sessionId}/messages`, {
-        method: 'POST',
-        body: JSON.stringify({ content }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to send message');
-      }
-
-      const createdMessages: MessageApiItem[] = await response.json();
+      const createdMessages = await sendConversationMessage(sessionId, content);
       setMessages((prev) => [
         ...prev,
         ...createdMessages.map((message) => ({

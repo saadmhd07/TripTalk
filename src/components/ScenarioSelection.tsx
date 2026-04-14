@@ -1,22 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Plane, Car, Home, Building2, Coffee, Users } from 'lucide-react';
 
-import { apiFetch } from '../lib/api';
+import { scenarioPresentation } from '../lib/presentation';
+import { fetchCountryScenarios } from '../lib/triptalk-api';
+import type { CountryName, ScenarioApiItem } from '../lib/types';
 
 interface ScenarioSelectionProps {
-  country: 'Chile' | 'USA';
+  country: CountryName;
   countryId: number;
   onSelect: (scenario: { id: number; title: string }) => Promise<void>;
-}
-
-interface ScenarioApiItem {
-  id: number;
-  country_id: number;
-  slug: string;
-  title: string;
-  description: string;
-  difficulty: string;
-  is_active: boolean;
 }
 
 export function ScenarioSelection({ country, countryId, onSelect }: ScenarioSelectionProps) {
@@ -29,8 +20,7 @@ export function ScenarioSelection({ country, countryId, onSelect }: ScenarioSele
 
     async function loadScenarios() {
       setLoading(true);
-      const response = await apiFetch(`/countries/${countryId}/scenarios`);
-      const data: ScenarioApiItem[] = await response.json();
+      const data = await fetchCountryScenarios(countryId);
       if (!ignore) {
         setScenarios(data);
         setLoading(false);
@@ -47,49 +37,6 @@ export function ScenarioSelection({ country, countryId, onSelect }: ScenarioSele
       ignore = true;
     };
   }, [countryId]);
-
-  const scenarioPresentation = {
-    Chile: [
-      {
-        slug: 'aeroport-santiago',
-        icon: Plane,
-        color: 'bg-sky-50 text-sky-700',
-        iconColor: 'text-sky-500'
-      },
-      {
-        slug: 'taxi-uber-santiago',
-        icon: Car,
-        color: 'bg-amber-50 text-amber-700',
-        iconColor: 'text-amber-500'
-      },
-      {
-        slug: 'rencontre-coloc',
-        icon: Home,
-        color: 'bg-emerald-50 text-emerald-700',
-        iconColor: 'text-emerald-500'
-      }
-    ],
-    USA: [
-      {
-        slug: 'immigration-usa',
-        icon: Building2,
-        color: 'bg-blue-50 text-blue-700',
-        iconColor: 'text-blue-500'
-      },
-      {
-        slug: 'order-coffee',
-        icon: Coffee,
-        color: 'bg-orange-50 text-orange-700',
-        iconColor: 'text-orange-500'
-      },
-      {
-        slug: 'campus-meetup',
-        icon: Users,
-        color: 'bg-purple-50 text-purple-700',
-        iconColor: 'text-purple-500'
-      }
-    ]
-  } as const;
 
   const presentationMap = Object.fromEntries(
     scenarioPresentation[country].map((item) => [item.slug, item])
