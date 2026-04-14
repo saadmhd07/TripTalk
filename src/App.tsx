@@ -11,27 +11,9 @@ import { CulturalSummary } from './components/CulturalSummary';
 import { ScenarioSelection } from './components/ScenarioSelection';
 import { ConversationScreen } from './components/ConversationScreen';
 import { FeedbackScreen } from './components/FeedbackScreen';
-import { apiFetch } from './lib/api';
+import { createConversationSession } from './lib/triptalk-api';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
-
-type Screen = 
-  | 'splash'
-  | 'onboarding1'
-  | 'onboarding2'
-  | 'level'
-  | 'country'
-  | 'cultural'
-  | 'scenario'
-  | 'conversation'
-  | 'feedback';
-
-type Level = 'Débutant' | 'Intermédiaire' | 'Avancé' | null;
-type Country = 'Chile' | 'USA' | null;
-
-interface SelectedScenario {
-  id: number;
-  title: string;
-}
+import type { Country, Level, Screen, SelectedScenario } from './lib/types';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
@@ -42,6 +24,15 @@ export default function App() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(!isSupabaseConfigured);
   const [session, setSession] = useState<Session | null>(null);
+
+  function resetFlowState() {
+    setCurrentScreen('splash');
+    setSelectedLevel(null);
+    setSelectedCountry(null);
+    setSelectedCountryId(null);
+    setSelectedScenario(null);
+    setSessionId(null);
+  }
 
   useEffect(() => {
     if (!supabase) {
@@ -77,16 +68,7 @@ export default function App() {
   };
 
   const handleScenarioSelect = async (scenario: SelectedScenario) => {
-    const response = await apiFetch('/conversation-sessions', {
-      method: 'POST',
-      body: JSON.stringify({ scenario_id: scenario.id }),
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to create conversation session');
-    }
-
-    const session = await response.json();
+    const session = await createConversationSession(scenario.id);
     setSelectedScenario(scenario);
     setSessionId(session.id);
     setCurrentScreen('conversation');
@@ -97,12 +79,7 @@ export default function App() {
       return;
     }
     await supabase.auth.signOut();
-    setCurrentScreen('splash');
-    setSelectedLevel(null);
-    setSelectedCountry(null);
-    setSelectedCountryId(null);
-    setSelectedScenario(null);
-    setSessionId(null);
+    resetFlowState();
   }
 
   if (!authReady) {

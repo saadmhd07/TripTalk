@@ -1,25 +1,14 @@
 import { useEffect, useState } from 'react';
 import { CheckCircle2, Lightbulb, BookOpen, RotateCcw, List, Globe, TrendingUp, Award } from 'lucide-react';
 
-import { apiFetch } from '../lib/api';
+import { fetchSessionFeedback } from '../lib/triptalk-api';
+import type { FeedbackApiResponse } from '../lib/types';
 
 interface FeedbackScreenProps {
   sessionId: string;
   onRetry: () => void;
   onNewScenario: () => void;
   onChangeCountry: () => void;
-}
-
-interface FeedbackApiResponse {
-  id: number;
-  session_id: string;
-  global_score: number;
-  vocabulary_score: number | null;
-  fluency_score: number | null;
-  strengths: string[];
-  improvements: string[];
-  cultural_tip: string | null;
-  created_at: string;
 }
 
 export function FeedbackScreen({ sessionId, onRetry, onNewScenario, onChangeCountry }: FeedbackScreenProps) {
@@ -34,11 +23,7 @@ export function FeedbackScreen({ sessionId, onRetry, onNewScenario, onChangeCoun
       setLoading(true);
       setError(null);
       try {
-        const response = await apiFetch(`/conversation-sessions/${sessionId}/feedback`);
-        if (!response.ok) {
-          throw new Error('Failed to load feedback');
-        }
-        const data: FeedbackApiResponse = await response.json();
+        const data = await fetchSessionFeedback(sessionId);
         if (!ignore) {
           setFeedback(data);
         }
