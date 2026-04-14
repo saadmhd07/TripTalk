@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { getLanguageLabel, scenarioPresentation } from '../lib/presentation';
+import { getLanguageLabel, getScenarioPresentation } from '../lib/presentation';
 import { fetchCountryScenarios } from '../lib/triptalk-api';
 import type { CountryName, ScenarioApiItem } from '../lib/types';
 
@@ -38,10 +38,6 @@ export function ScenarioSelection({ country, countryId, onSelect }: ScenarioSele
     };
   }, [countryId]);
 
-  const presentationMap = Object.fromEntries(
-    scenarioPresentation[country].map((item) => [item.slug, item])
-  );
-
   async function handleSelect(scenario: ScenarioApiItem) {
     setSubmittingTitle(scenario.title);
     try {
@@ -66,7 +62,7 @@ export function ScenarioSelection({ country, countryId, onSelect }: ScenarioSele
         <div className="space-y-6">
           {loading && <p className="text-center text-gray-500">Chargement des scénarios...</p>}
           {!loading && scenarios.map((scenario) => {
-            const presentation = presentationMap[scenario.slug] ?? scenarioPresentation[country][0];
+            const presentation = getScenarioPresentation(scenario.slug);
             const Icon = presentation.icon;
             return (
               <button

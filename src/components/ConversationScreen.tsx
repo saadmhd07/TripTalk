@@ -1,9 +1,14 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { Lightbulb, Send, Target, TrendingUp } from 'lucide-react';
 
-import { conversationAvatarPresentation } from '../lib/presentation';
+import {
+  getConversationAvatarPresentation,
+  getCulturalTip,
+  getDefaultConversationGreeting,
+  getVocabularyHints,
+} from '../lib/presentation';
 import { fetchConversationMessages, sendConversationMessage } from '../lib/triptalk-api';
-import type { CountryName, MessageApiItem } from '../lib/types';
+import type { CountryName } from '../lib/types';
 
 interface ConversationScreenProps {
   country: CountryName;
@@ -23,7 +28,7 @@ export function ConversationScreen({ country, scenario, sessionId, onFeedback }:
   const [isSending, setIsSending] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const avatar = conversationAvatarPresentation[country];
+  const avatar = getConversationAvatarPresentation(country);
 
   useEffect(() => {
     let ignore = false;
@@ -39,10 +44,7 @@ export function ConversationScreen({ country, scenario, sessionId, onFeedback }:
             setMessages([
               {
                 sender: 'avatar',
-                text:
-                  country === 'Chile'
-                    ? '¡Hola! ¿Cómo estás? Bienvenido a Chile, cachai.'
-                    : 'Hey! How are you doing? Welcome to the States!',
+                text: getDefaultConversationGreeting(country),
               },
             ]);
           } else {
@@ -193,41 +195,18 @@ export function ConversationScreen({ country, scenario, sessionId, onFeedback }:
                 <h4 className="text-gray-800 text-lg">Conseil culturel</h4>
               </div>
               <p className="text-gray-600 text-sm leading-relaxed">
-                {country === 'Chile' 
-                  ? 'Au Chili, on utilise beaucoup "cachai" (tu vois) et "po" pour renforcer les phrases.'
-                  : 'Aux USA, montrer de l\'enthousiasme dans la conversation est très apprécié. N\'hésite pas à utiliser "awesome" ou "cool"!'
-                }
+                {getCulturalTip(country)}
               </p>
             </div>
             
             <div className="bg-gradient-to-br from-orange-100 to-rose-100 rounded-3xl shadow-lg p-6">
               <h4 className="text-gray-800 text-lg mb-4">Vocabulaire clé</h4>
               <div className="space-y-2">
-                {country === 'Chile' ? (
-                  <>
-                    <div className="bg-white rounded-xl p-3">
-                      <p className="text-sm">cachai = tu vois</p>
-                    </div>
-                    <div className="bg-white rounded-xl p-3">
-                      <p className="text-sm">po = particule</p>
-                    </div>
-                    <div className="bg-white rounded-xl p-3">
-                      <p className="text-sm">weón = mec</p>
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="bg-white rounded-xl p-3">
-                      <p className="text-sm">awesome = génial</p>
-                    </div>
-                    <div className="bg-white rounded-xl p-3">
-                      <p className="text-sm">for sure = bien sûr</p>
-                    </div>
-                    <div className="bg-white rounded-xl p-3">
-                      <p className="text-sm">no worries = pas de souci</p>
-                    </div>
-                  </>
-                )}
+                {getVocabularyHints(country).map((hint) => (
+                  <div key={hint} className="bg-white rounded-xl p-3">
+                    <p className="text-sm">{hint}</p>
+                  </div>
+                ))}
               </div>
             </div>
 

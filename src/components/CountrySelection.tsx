@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
+import { fetchCountries } from '../lib/triptalk-api';
+import { getCountryPresentation } from '../lib/presentation';
+import type { CountryApiItem } from '../lib/types';
 
 interface CountrySelectionProps {
-  onSelect: (country: 'Chile' | 'USA', countryId: number) => void;
+  onSelect: (country: string, countryId: number) => void;
 }
-import { fetchCountries } from '../lib/triptalk-api';
-import { countryPresentation } from '../lib/presentation';
-import type { CountryApiItem } from '../lib/types';
 
 export function CountrySelection({ onSelect }: CountrySelectionProps) {
   const [countries, setCountries] = useState<CountryApiItem[]>([]);
@@ -33,11 +33,6 @@ export function CountrySelection({ onSelect }: CountrySelectionProps) {
     };
   }, []);
 
-  const visibleCountries = countries.filter(
-    (country): country is CountryApiItem & { name: 'Chile' | 'USA' } =>
-      country.name === 'Chile' || country.name === 'USA'
-  );
-
   return (
     <div className="min-h-screen flex items-center justify-center p-8">
       <div className="w-full max-w-6xl mx-auto">
@@ -52,11 +47,11 @@ export function CountrySelection({ onSelect }: CountrySelectionProps) {
         
         <div className="grid grid-cols-2 gap-10">
           {loading && <p className="col-span-2 text-center text-gray-500">Chargement des pays...</p>}
-          {!loading && visibleCountries.map((country) => {
-            const presentation = countryPresentation[country.name];
+          {!loading && countries.map((country) => {
+            const presentation = getCountryPresentation(country.name, country.code);
             return (
               <div
-                key={country.name}
+                key={country.id}
                 className="relative rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl transition-all group h-[500px]"
               >
                 <div className="absolute inset-0">
