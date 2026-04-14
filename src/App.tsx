@@ -6,6 +6,7 @@ import { SplashScreen } from './components/SplashScreen';
 import { OnboardingOne } from './components/OnboardingOne';
 import { OnboardingTwo } from './components/OnboardingTwo';
 import { LevelSelection } from './components/LevelSelection';
+import { HistoryScreen } from './components/HistoryScreen';
 import { CountrySelection } from './components/CountrySelection';
 import { CulturalSummary } from './components/CulturalSummary';
 import { ScenarioSelection } from './components/ScenarioSelection';
@@ -14,6 +15,7 @@ import { FeedbackScreen } from './components/FeedbackScreen';
 import { getLanguageLabel } from './lib/presentation';
 import {
   createConversationSession,
+  fetchMyConversationHistory,
   fetchMyLanguageLevel,
   fetchMyProfile,
   updateMyLanguageLevel,
@@ -22,6 +24,7 @@ import {
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import type {
   Country,
+  ConversationSessionHistoryApiResponse,
   Level,
   Screen,
   SelectedScenario,
@@ -42,6 +45,9 @@ export default function App() {
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isSavingLevel, setIsSavingLevel] = useState(false);
   const [levelContext, setLevelContext] = useState<'onboarding' | 'scenario'>('onboarding');
+  const [historyItems, setHistoryItems] = useState<ConversationSessionHistoryApiResponse[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
 
   function parseVocabularyHints(raw: string | null | undefined): string[] | null {
     if (!raw) {
@@ -68,6 +74,9 @@ export default function App() {
     setProfileReady(!isSupabaseConfigured);
     setIsSavingLevel(false);
     setLevelContext('onboarding');
+    setHistoryItems([]);
+    setHistoryLoading(false);
+    setHistoryError(null);
   }
 
   useEffect(() => {
@@ -131,6 +140,19 @@ export default function App() {
       ignore = true;
     };
   }, [session]);
+
+  async function loadHistory() {
+    setHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const items = await fetchMyConversationHistory();
+      setHistoryItems(items);
+    } catch {
+      setHistoryError("Impossible de charger l'historique.");
+    } finally {
+      setHistoryLoading(false);
+    }
+  }
 
   const handleLevelSelect = async (level: Exclude<Level, null>) => {
     setSelectedLevel(level);
@@ -197,6 +219,45 @@ export default function App() {
     resetFlowState();
   }
 
+  function openHistory() {
+    void loadHistory();
+    setCurrentScreen('history');
+  }
+
+  function handleOpenConversationFromHistory(item: ConversationSessionHistoryApiResponse) {
+    setSelectedCountry(item.country_name);
+    setSelectedScenario({
+      id: item.scenario_id,
+      title: item.scenario_title,
+      language_code: item.language_code,
+      mode: item.mode,
+      intro_message: item.intro_message,
+      cultural_tip: item.cultural_tip,
+      vocabulary_hints: item.vocabulary_hints,
+      partner_name: item.partner_name,
+      partner_role: item.partner_role,
+    });
+    setSessionId(item.id);
+    setCurrentScreen('conversation');
+  }
+
+  function handleOpenFeedbackFromHistory(item: ConversationSessionHistoryApiResponse) {
+    setSelectedCountry(item.country_name);
+    setSelectedScenario({
+      id: item.scenario_id,
+      title: item.scenario_title,
+      language_code: item.language_code,
+      mode: item.mode,
+      intro_message: item.intro_message,
+      cultural_tip: item.cultural_tip,
+      vocabulary_hints: item.vocabulary_hints,
+      partner_name: item.partner_name,
+      partner_role: item.partner_role,
+    });
+    setSessionId(item.id);
+    setCurrentScreen('feedback');
+  }
+
   if (!authReady) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-50 text-gray-500">
@@ -227,6 +288,13 @@ export default function App() {
           </div>
           <button
             type="button"
+            onClick={openHistory}
+            className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-600 transition hover:border-gray-300 hover:text-gray-900"
+          >
+            Historique
+          </button>
+          <button
+            type="button"
             onClick={() => void handleSignOut()}
             className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-600 transition hover:border-gray-300 hover:text-gray-900"
           >
@@ -255,6 +323,17 @@ export default function App() {
               : undefined
           }
           scenarioTitle={levelContext === 'scenario' ? selectedScenario?.title : undefined}
+        />
+      )}
+      {currentScreen === 'history' && (
+        <HistoryScreen
+          items={historyItems}
+          isLoading={historyLoading}
+          error={historyError}
+          onOpenConversation={handleOpenConversationFromHistory}
+          onOpenFeedback={handleOpenFeedbackFromHistory}
+          onRefresh={() => void loadHistory()}
+          onStartNew={() => setCurrentScreen('country')}
         />
       )}
       {currentScreen === 'country' && (
