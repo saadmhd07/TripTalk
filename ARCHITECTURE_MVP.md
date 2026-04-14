@@ -111,16 +111,16 @@ The codebase is no longer just a generated UI mock. The main product loop works 
 
 This is the cleanup block we should address next.
 
-- [ ] Remove `__pycache__` and generated Python artifacts from the repo
-- [ ] Add `.gitignore` for Python, Vite, env files, build outputs, egg-info, caches
-- [ ] Remove leftover generated build artifacts from versioned source control if present
-- [ ] Centralize frontend types for API payloads and responses
-- [ ] Centralize repeated frontend constants and country/scenario presentation mapping
-- [ ] Introduce clearer API service modules instead of scattered fetch logic
+- [x] Remove `__pycache__` and generated Python artifacts from the repo
+- [x] Add `.gitignore` for Python, Vite, env files, build outputs, egg-info, caches
+- [x] Remove leftover generated build artifacts from versioned source control if present
+- [x] Centralize frontend types for API payloads and responses
+- [x] Centralize repeated frontend constants and country/scenario presentation mapping
+- [x] Introduce clearer API service modules instead of scattered fetch logic
 - [ ] Improve backend error handling and logging
 - [ ] Replace broad exception handling around AI calls with more explicit handling
 - [ ] Tighten typing around backend service and repository boundaries
-- [ ] Decide whether to keep or remove placeholder service files that are still mostly empty
+- [x] Decide whether to keep or remove placeholder service files that are still mostly empty
 - [ ] Add backend tests beyond the healthcheck
 - [ ] Add frontend smoke tests later if worth it
 
@@ -140,12 +140,12 @@ These are not blockers for local development, but they matter before launch.
 
 ### Phase 1: Technical Cleanup
 
-- [ ] Add `.gitignore`
-- [ ] remove tracked generated files and caches
-- [ ] clean backend placeholders
-- [ ] reorganize frontend API access
+- [x] Add `.gitignore`
+- [x] remove tracked generated files and caches
+- [x] clean backend placeholders
+- [x] reorganize frontend API access
 - [ ] improve naming consistency and comments
-- [ ] add a short developer setup guide
+- [x] add a short developer setup guide
 
 ### Phase 2: Core Product Hardening
 
@@ -169,12 +169,11 @@ These are not blockers for local development, but they matter before launch.
 
 This is the order I recommend now:
 
-1. Clean repository hygiene
-2. Create GitHub repository
-3. Add `.gitignore` and remove generated junk
-4. Refactor frontend API layer
-5. Refactor backend auth / user flow slightly
-6. Add a user history page
+1. Refactor backend auth / user flow slightly
+2. Add a user history page
+3. Improve backend logging and error handling
+4. Add backend tests beyond healthcheck
+5. Improve naming consistency and comments
 
 ## Environment Variables
 
