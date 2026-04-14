@@ -182,6 +182,137 @@ The product flow should evolve toward this:
 9. User receives feedback
 10. User can later revisit conversation history
 
+## Desktop UI Direction
+
+The product should now evolve from a linear fullscreen flow into a desktop-oriented application shell with persistent navigation.
+
+The current step-by-step MVP was useful to validate the product loop, but it is no longer the right long-term UI structure for a navigable app.
+
+### App Shell
+
+The desktop MVP should use a shared application shell with:
+
+- a persistent top navigation bar
+- a central content area
+- visible authenticated user context
+- clear entry points to the main product sections
+
+Recommended top bar items:
+
+- `TripTalk`
+- `Explorer`
+- `Historique`
+- `Profil`
+- primary action `Nouvelle conversation`
+- user email / avatar / sign out
+
+### Main Product Sections
+
+The desktop MVP should organize the app into four main sections:
+
+#### 1. Explorer
+
+This becomes the main landing page after sign-in.
+
+Purpose:
+
+- choose a country
+- browse available scenarios for that country
+- understand scenario language and mode
+- start a new conversation
+
+Expected content:
+
+- country selection area
+- scenario list
+- badges for `guided` / `free`
+- scenario language
+- lightweight session preparation before starting
+
+#### 2. Conversation
+
+This becomes the page for an active session.
+
+Recommended layout:
+
+- left panel: partner, role, country, language, scenario, mode
+- center panel: conversation thread and composer
+- right panel: cultural tip, vocabulary, goal, context
+
+#### 3. Historique
+
+This becomes a first-class section of the app.
+
+Purpose:
+
+- review past sessions
+- reopen conversations
+- revisit feedback
+
+Expected content:
+
+- list of past sessions
+- country
+- scenario
+- language
+- mode
+- date
+- level used
+- last message preview
+- feedback availability
+
+#### 4. Profil
+
+This becomes the home for account and learning preferences.
+
+Recommended MVP content:
+
+- email
+- display name
+- native language
+- per-language levels
+
+Optional later additions:
+
+- voice preferences
+- avatar preferences
+- learning goals
+
+### Session Preparation
+
+The user should prepare the session after scenario selection, not during a generic onboarding step.
+
+Recommended preparation step:
+
+- selected country
+- selected scenario
+- detected scenario language
+- user's saved level for that language
+- ability to adjust level before starting
+- start conversation CTA
+
+### Onboarding Direction
+
+The existing onboarding should be reduced over time.
+
+Recommended direction:
+
+- keep auth
+- keep a lightweight profile completion step if needed
+- remove mandatory linear onboarding steps that block normal navigation
+- send signed-in users to `Explorer` as the default home
+
+### Implementation Order For The UI Refactor
+
+Recommended order:
+
+1. Create a shared desktop `AppShell`
+2. Add top navigation and app-level route/state handling
+3. Turn country/scenario/level flow into `Explorer`
+4. Add a real `Profil` page
+5. Keep `Conversation` and `Historique` inside the shared shell
+6. Reduce or remove the older fullscreen onboarding flow
+
 ## Modeling Decisions
 
 These are the working product decisions for now.
@@ -347,6 +478,9 @@ These are not blockers for local development, but they matter before launch.
 - [ ] Better UX around loading, retry, and empty states
 - [ ] Session recovery if the browser reloads mid-conversation
 - [ ] Better conversation controls than the current simple text chat
+- [ ] Shared desktop app shell with persistent top navigation
+- [ ] Real `Explorer` page instead of a linear fullscreen flow
+- [ ] Real `Profil` page
 - [ ] Voice and avatar interaction path for the longer-term product direction
 
 ## Suggested Roadmap
@@ -384,11 +518,11 @@ These are not blockers for local development, but they matter before launch.
 
 This is the order I recommend now:
 
-1. Add a user history page
-2. Improve backend logging and error handling
-3. Improve feedback structure and prompt contracts
-4. Clean remaining outdated profile fields such as global `target_language` and `level`
-5. Add frontend smoke tests if the UI starts stabilizing
+1. Build a desktop app shell with top navigation
+2. Turn the current selection flow into a real `Explorer` page
+3. Add a `Profil` page
+4. Improve backend logging and error handling
+5. Improve feedback structure and prompt contracts
 
 ## Recent Progress
 
