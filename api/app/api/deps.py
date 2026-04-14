@@ -30,5 +30,17 @@ def get_current_user_claims(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(exc)) from exc
 
 
+def get_current_user_id(
+    claims: dict[str, Any] = Depends(get_current_user_claims),
+) -> str:
+    user_id = str(claims.get("sub", "")).strip()
+    if not user_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Missing user identifier in auth token",
+        )
+    return user_id
+
+
 def get_db_session(db: Session = Depends(get_db)) -> Session:
     return db
