@@ -86,6 +86,11 @@ Recommended MVP fields:
 - `difficulty`
 - `system_prompt`
 - `mode`
+- `intro_message`
+- `cultural_tip`
+- `vocabulary_hints`
+- `partner_name`
+- `partner_role`
 - `is_active`
 
 Suggested `mode` values:
@@ -201,6 +206,9 @@ The product currently supports:
 - Alembic migrations
 - Supabase Auth on the frontend
 - JWT verification on the backend using Supabase JWKS
+- per-language user level persistence
+- scenario language and mode metadata
+- scenario content fields for intro/cultural context
 - OpenAI-backed conversation replies
 - persisted sessions, messages, and feedback
 
@@ -213,6 +221,9 @@ The codebase is no longer just a generated UI mock. The main product loop works 
 - [x] Splash and onboarding flow
 - [x] Country selection
 - [x] Scenario selection
+- [x] Free conversation scenario support
+- [x] Scenario language-aware flow
+- [x] Session level selection after scenario choice
 - [x] Conversation session creation
 - [x] Message sending from frontend to backend
 - [x] AI response generation from backend
@@ -229,6 +240,10 @@ The codebase is no longer just a generated UI mock. The main product loop works 
 - [x] Added Supabase client setup
 - [x] Added auth screen for sign in / sign up
 - [x] Renamed product branding to `TripTalk`
+- [x] Load scenario language and mode from backend
+- [x] Load per-language level after scenario selection
+- [x] Stop depending on hardcoded `Chile` / `USA` flow assumptions
+- [x] Use scenario-driven content in conversation view when available
 
 ### Backend
 
@@ -237,6 +252,11 @@ The codebase is no longer just a generated UI mock. The main product loop works 
 - [x] Alembic initial migration
 - [x] Seed command for reference data
 - [x] Repository structure
+- [x] Ownership enforcement on conversation resources
+- [x] Persistent `/me` profile endpoints
+- [x] Per-language user level model and endpoints
+- [x] Scenario `language_code` and `mode`
+- [x] Scenario content fields for intro/cultural context
 - [x] Conversation session persistence
 - [x] Message persistence
 - [x] Feedback persistence
@@ -251,6 +271,7 @@ The codebase is no longer just a generated UI mock. The main product loop works 
 - [x] Supabase frontend authentication flow
 - [x] Backend verification of Supabase access tokens
 - [x] Working authenticated user flow
+- [x] Authenticated ownership checks on protected session resources
 
 ## Current Stack
 
@@ -310,7 +331,7 @@ This is the cleanup block we should address next.
 - [ ] Replace broad exception handling around AI calls with more explicit handling
 - [ ] Tighten typing around backend service and repository boundaries
 - [x] Decide whether to keep or remove placeholder service files that are still mostly empty
-- [ ] Add backend tests beyond the healthcheck
+- [x] Add backend tests beyond the healthcheck
 - [ ] Add frontend smoke tests later if worth it
 
 ## Product Gaps
@@ -320,7 +341,7 @@ These are not blockers for local development, but they matter before launch.
 - [ ] Refine the country-first entry flow into a clearer country and scenario selection model
 - [ ] Proper user profile onboarding
 - [ ] Real user-specific history screen
-- [ ] Free conversation mode in addition to guided scenarios
+- [x] Free conversation mode in addition to guided scenarios
 - [ ] Better feedback quality and consistency
 - [ ] Prompt refinement by level, country, scenario, and language-specific cultural context
 - [ ] Better UX around loading, retry, and empty states
@@ -342,9 +363,9 @@ These are not blockers for local development, but they matter before launch.
 ### Phase 2: Core Product Hardening
 
 - [ ] remove or restrict `DEV_MODE`
-- [ ] ensure all session and message ownership is tied to authenticated users
-- [ ] add `/me` and profile completion flow
-- [ ] define profile vs session model around native language, per-language level, and conversation preferences
+- [x] ensure all session and message ownership is tied to authenticated users
+- [x] add `/me` and profile completion flow
+- [x] define profile vs session model around native language, per-language level, and conversation preferences
 - [ ] add user conversation history screen
 - [ ] improve feedback structure and prompt contracts
 
@@ -363,11 +384,25 @@ These are not blockers for local development, but they matter before launch.
 
 This is the order I recommend now:
 
-1. Define the MVP product model: profile, per-language level, country, scenario, free mode
-2. Add a real profile completion flow
-3. Add a user history page
-4. Improve backend logging and error handling
-5. Add backend tests beyond healthcheck
+1. Add a user history page
+2. Improve backend logging and error handling
+3. Improve feedback structure and prompt contracts
+4. Clean remaining outdated profile fields such as global `target_language` and `level`
+5. Add frontend smoke tests if the UI starts stabilizing
+
+## Recent Progress
+
+Recent implementation work completed:
+
+- enforced ownership on session, message, and feedback resources
+- added persistent `/me` profile endpoints
+- introduced `UserLanguageLevel` for per-language proficiency
+- added `Scenario.language_code`
+- added `Scenario.mode` with guided and free conversations
+- added `ConversationSession.level_at_start`
+- added scenario content fields such as intro message, cultural tip, vocabulary hints, partner name, and partner role
+- updated the frontend flow so level is chosen after scenario selection
+- removed frontend assumptions that only `Chile` and `USA` exist
 
 ## Environment Variables
 
