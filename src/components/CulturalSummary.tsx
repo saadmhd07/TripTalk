@@ -1,61 +1,12 @@
-import { MessageSquare, Smile, Lightbulb } from 'lucide-react';
+import { getCulturalSummary } from '../lib/presentation';
 
 interface CulturalSummaryProps {
-  country: 'Chile' | 'USA';
+  country: string;
   onNext: () => void;
 }
 
 export function CulturalSummary({ country, onNext }: CulturalSummaryProps) {
-  const culturalInfo = {
-    Chile: {
-      flag: '🇨🇱',
-      keywords: [
-        {
-          icon: MessageSquare,
-          title: 'Expressions typiques',
-          text: 'Cachai, po, weón - des mots très fréquents au Chili',
-          color: 'bg-red-50 text-red-700'
-        },
-        {
-          icon: Smile,
-          title: 'Ton amical',
-          text: 'Les Chiliens sont chaleureux et directs dans leurs échanges',
-          color: 'bg-blue-50 text-blue-700'
-        },
-        {
-          icon: Lightbulb,
-          title: 'Conseil pratique',
-          text: 'Le tutoiement est très courant, même avec des inconnus',
-          color: 'bg-orange-50 text-orange-700'
-        }
-      ]
-    },
-    USA: {
-      flag: '🇺🇸',
-      keywords: [
-        {
-          icon: MessageSquare,
-          title: 'Expressions courantes',
-          text: 'What&apos;s up, Awesome, No worries - le vocabulaire du quotidien',
-          color: 'bg-blue-50 text-blue-700'
-        },
-        {
-          icon: Smile,
-          title: 'Attitude positive',
-          text: 'L&apos;enthousiasme et la politesse sont très valorisés',
-          color: 'bg-red-50 text-red-700'
-        },
-        {
-          icon: Lightbulb,
-          title: 'Conseil pratique',
-          text: 'Le small talk est important, même avec des inconnus',
-          color: 'bg-purple-50 text-purple-700'
-        }
-      ]
-    }
-  };
-
-  const info = culturalInfo[country];
+  const info = getCulturalSummary(country);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-8">

@@ -10,7 +10,7 @@ export type Screen =
   | 'feedback';
 
 export type Level = 'Débutant' | 'Intermédiaire' | 'Avancé' | null;
-export type CountryName = 'Chile' | 'USA';
+export type CountryName = string;
 export type Country = CountryName | null;
 
 export interface SelectedScenario {
