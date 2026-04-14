@@ -4,6 +4,8 @@ from app.services.ai_service import AIService
 
 
 class FeedbackService:
+    """Builds a feedback payload from a finished conversation."""
+
     def __init__(self) -> None:
         self.ai_service = AIService()
 

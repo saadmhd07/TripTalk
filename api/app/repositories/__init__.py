@@ -1,1 +1,1 @@
-# Database repository package.
+"""Database repository layer."""

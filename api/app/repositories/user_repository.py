@@ -5,6 +5,8 @@ from app.models.user import User
 
 
 class UserRepository:
+    """Persistence helpers for application users."""
+
     def get_by_email(self, db: Session, email: str) -> User | None:
         stmt: Select[tuple[User]] = select(User).where(User.email == email)
         return db.scalar(stmt)
