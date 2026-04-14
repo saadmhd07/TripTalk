@@ -14,6 +14,11 @@ interface ConversationScreenProps {
   country: CountryName;
   scenario: string;
   sessionId: string;
+  introMessage?: string | null;
+  culturalTip?: string | null;
+  vocabularyHints?: string[] | null;
+  partnerName?: string | null;
+  partnerRole?: string | null;
   onFeedback: () => void;
 }
 
@@ -22,13 +27,31 @@ interface Message {
   text: string;
 }
 
-export function ConversationScreen({ country, scenario, sessionId, onFeedback }: ConversationScreenProps) {
+export function ConversationScreen({
+  country,
+  scenario,
+  sessionId,
+  introMessage,
+  culturalTip,
+  vocabularyHints,
+  partnerName,
+  partnerRole,
+  onFeedback,
+}: ConversationScreenProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const avatar = getConversationAvatarPresentation(country);
+  const visibleAvatar = {
+    ...avatar,
+    name: partnerName || avatar.name,
+    role: partnerRole || avatar.role,
+  };
+  const visibleCulturalTip = culturalTip || getCulturalTip(country);
+  const visibleVocabularyHints =
+    vocabularyHints && vocabularyHints.length > 0 ? vocabularyHints : getVocabularyHints(country);
 
   useEffect(() => {
     let ignore = false;
@@ -44,7 +67,7 @@ export function ConversationScreen({ country, scenario, sessionId, onFeedback }:
             setMessages([
               {
                 sender: 'avatar',
-                text: getDefaultConversationGreeting(country),
+                text: introMessage || getDefaultConversationGreeting(country),
               },
             ]);
           } else {
@@ -72,7 +95,7 @@ export function ConversationScreen({ country, scenario, sessionId, onFeedback }:
     return () => {
       ignore = true;
     };
-  }, [country, sessionId]);
+  }, [country, introMessage, sessionId]);
 
   async function handleSendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -107,11 +130,11 @@ export function ConversationScreen({ country, scenario, sessionId, onFeedback }:
         <div className="grid grid-cols-12 gap-8 h-[calc(100vh-4rem)]">
           {/* Left Panel - Avatar */}
           <div className="col-span-3 bg-white rounded-3xl shadow-lg p-8 flex flex-col items-center justify-center">
-            <div className={`${avatar.bgColor} w-40 h-40 rounded-full flex items-center justify-center text-7xl shadow-2xl mb-6`}>
-              {avatar.emoji}
+            <div className={`${visibleAvatar.bgColor} w-40 h-40 rounded-full flex items-center justify-center text-7xl shadow-2xl mb-6`}>
+              {visibleAvatar.emoji}
             </div>
-            <h3 className="text-gray-800 text-2xl mb-2">{avatar.name}</h3>
-            <p className="text-gray-500 text-center mb-8">{avatar.role}</p>
+            <h3 className="text-gray-800 text-2xl mb-2">{visibleAvatar.name}</h3>
+            <p className="text-gray-500 text-center mb-8">{visibleAvatar.role}</p>
             
             <div className="w-full space-y-4">
               <div className="bg-orange-50 rounded-xl p-4 text-center">
@@ -195,14 +218,14 @@ export function ConversationScreen({ country, scenario, sessionId, onFeedback }:
                 <h4 className="text-gray-800 text-lg">Conseil culturel</h4>
               </div>
               <p className="text-gray-600 text-sm leading-relaxed">
-                {getCulturalTip(country)}
+                {visibleCulturalTip}
               </p>
             </div>
             
             <div className="bg-gradient-to-br from-orange-100 to-rose-100 rounded-3xl shadow-lg p-6">
               <h4 className="text-gray-800 text-lg mb-4">Vocabulaire clé</h4>
               <div className="space-y-2">
-                {getVocabularyHints(country).map((hint) => (
+                {visibleVocabularyHints.map((hint) => (
                   <div key={hint} className="bg-white rounded-xl p-3">
                     <p className="text-sm">{hint}</p>
                   </div>

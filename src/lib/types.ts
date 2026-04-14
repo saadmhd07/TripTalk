@@ -18,6 +18,11 @@ export interface SelectedScenario {
   title: string;
   language_code: string;
   mode: string;
+  intro_message?: string | null;
+  cultural_tip?: string | null;
+  vocabulary_hints?: string | null;
+  partner_name?: string | null;
+  partner_role?: string | null;
 }
 
 export interface CountryApiItem {
@@ -37,6 +42,11 @@ export interface ScenarioApiItem {
   language_code: string;
   difficulty: string;
   mode: string;
+  intro_message: string | null;
+  cultural_tip: string | null;
+  vocabulary_hints: string | null;
+  partner_name: string | null;
+  partner_role: string | null;
   is_active: boolean;
 }
 
