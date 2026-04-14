@@ -26,6 +26,19 @@ class ConversationRepository:
         )
         return db.scalar(stmt)
 
+    def get_session_for_user(
+        self,
+        db: Session,
+        *,
+        session_id: str,
+        user_id: str,
+    ) -> ConversationSession | None:
+        stmt: Select[tuple[ConversationSession]] = select(ConversationSession).where(
+            ConversationSession.id == session_id,
+            ConversationSession.user_id == user_id,
+        )
+        return db.scalar(stmt)
+
     def complete_session(self, db: Session, session: ConversationSession) -> ConversationSession:
         session.status = ConversationSessionStatus.COMPLETED.value
         session.ended_at = datetime.now(UTC)

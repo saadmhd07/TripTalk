@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.api.deps import get_db_session
+from app.api.deps import get_current_user_id, get_db_session
 from app.repositories.conversation_repository import ConversationRepository
 from app.repositories.scenario_repository import ScenarioRepository
 from app.schemas.message import MessageCreate, MessageRead, MessageRole
@@ -16,9 +16,10 @@ ai_service = AIService()
 @router.get("/conversation-sessions/{session_id}/messages", response_model=list[MessageRead])
 def list_messages(
     session_id: str,
+    user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_db_session),
 ) -> list[MessageRead]:
-    session = conversation_repository.get_session(db, session_id)
+    session = conversation_repository.get_session_for_user(db, session_id=session_id, user_id=user_id)
     if session is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
 
@@ -39,9 +40,10 @@ def list_messages(
 def create_message(
     session_id: str,
     payload: MessageCreate,
+    user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_db_session),
 ) -> list[MessageRead]:
-    session = conversation_repository.get_session(db, session_id)
+    session = conversation_repository.get_session_for_user(db, session_id=session_id, user_id=user_id)
     if session is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
 
