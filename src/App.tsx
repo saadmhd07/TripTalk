@@ -43,6 +43,19 @@ export default function App() {
   const [isSavingLevel, setIsSavingLevel] = useState(false);
   const [levelContext, setLevelContext] = useState<'onboarding' | 'scenario'>('onboarding');
 
+  function parseVocabularyHints(raw: string | null | undefined): string[] | null {
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : null;
+    } catch {
+      return null;
+    }
+  }
+
   function resetFlowState() {
     setCurrentScreen('splash');
     setSelectedLevel(null);
@@ -265,6 +278,11 @@ export default function App() {
           country={selectedCountry!}
           scenario={selectedScenario!.title}
           sessionId={sessionId!}
+          introMessage={selectedScenario?.intro_message}
+          culturalTip={selectedScenario?.cultural_tip}
+          vocabularyHints={parseVocabularyHints(selectedScenario?.vocabulary_hints)}
+          partnerName={selectedScenario?.partner_name}
+          partnerRole={selectedScenario?.partner_role}
           onFeedback={() => setCurrentScreen('feedback')}
         />
       )}

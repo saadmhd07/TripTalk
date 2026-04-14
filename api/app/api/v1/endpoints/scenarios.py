@@ -25,6 +25,11 @@ def list_country_scenarios(
             language_code=scenario.language_code,
             difficulty=scenario.difficulty,
             mode=scenario.mode,
+            intro_message=scenario.intro_message,
+            cultural_tip=scenario.cultural_tip,
+            vocabulary_hints=scenario.vocabulary_hints,
+            partner_name=scenario.partner_name,
+            partner_role=scenario.partner_role,
             is_active=scenario.is_active,
         )
         for scenario in scenarios
@@ -52,5 +57,10 @@ def get_scenario(
         language_code=scenario.language_code,
         difficulty=scenario.difficulty,
         mode=scenario.mode,
+        intro_message=scenario.intro_message,
+        cultural_tip=scenario.cultural_tip,
+        vocabulary_hints=scenario.vocabulary_hints,
+        partner_name=scenario.partner_name,
+        partner_role=scenario.partner_role,
         is_active=scenario.is_active,
     )
