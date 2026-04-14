@@ -16,3 +16,4 @@ class User(Base):
 
     profile = relationship("Profile", back_populates="user", uselist=False)
     sessions = relationship("ConversationSession", back_populates="user")
+    language_levels = relationship("UserLanguageLevel", back_populates="user")

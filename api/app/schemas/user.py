@@ -15,3 +15,14 @@ class UserProfileRead(BaseModel):
     native_language: str | None = None
     target_language: str | None = None
     level: str | None = None
+
+
+class UserLanguageLevelUpsert(BaseModel):
+    level: str
+
+
+class UserLanguageLevelRead(BaseModel):
+    id: str
+    user_id: str
+    language_code: str
+    level: str
