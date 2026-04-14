@@ -1,1 +1,1 @@
-# External integrations package.
+"""External integrations package."""

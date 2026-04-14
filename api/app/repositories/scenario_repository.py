@@ -5,6 +5,8 @@ from app.models.scenario import Scenario
 
 
 class ScenarioRepository:
+    """Read/write helpers for scenario catalog data."""
+
     def list_by_country(self, db: Session, country_id: int) -> list[Scenario]:
         stmt: Select[tuple[Scenario]] = (
             select(Scenario)

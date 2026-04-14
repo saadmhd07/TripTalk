@@ -51,6 +51,8 @@ DEFAULT_SCENARIOS = [
 
 
 class SeedService:
+    """Seeds the reference catalog used by the MVP."""
+
     def __init__(self) -> None:
         self.country_repository = CountryRepository()
         self.scenario_repository = ScenarioRepository()

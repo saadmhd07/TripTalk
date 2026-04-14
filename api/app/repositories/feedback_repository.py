@@ -7,6 +7,8 @@ from app.models.feedback import Feedback
 
 
 class FeedbackRepository:
+    """Persistence helpers for generated session feedback."""
+
     def get_by_session_id(self, db: Session, session_id: str) -> Feedback | None:
         stmt: Select[tuple[Feedback]] = select(Feedback).where(Feedback.session_id == session_id)
         return db.scalar(stmt)
@@ -25,8 +27,8 @@ class FeedbackRepository:
     ) -> Feedback:
         feedback = self.get_by_session_id(db, session_id)
         if feedback is None:
-          feedback = Feedback(session_id=session_id, global_score=global_score)
-          db.add(feedback)
+            feedback = Feedback(session_id=session_id, global_score=global_score)
+            db.add(feedback)
 
         feedback.global_score = global_score
         feedback.vocabulary_score = vocabulary_score

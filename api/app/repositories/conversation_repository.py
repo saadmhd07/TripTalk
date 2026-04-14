@@ -8,6 +8,8 @@ from app.models.message import Message
 
 
 class ConversationRepository:
+    """Persistence helpers for sessions and messages."""
+
     def create_session(self, db: Session, *, user_id: str, scenario_id: int) -> ConversationSession:
         session = ConversationSession(
             user_id=user_id,

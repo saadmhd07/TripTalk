@@ -5,6 +5,8 @@ from app.models.country import Country
 
 
 class CountryRepository:
+    """Read/write helpers for country catalog data."""
+
     def list_active(self, db: Session) -> list[Country]:
         stmt: Select[tuple[Country]] = (
             select(Country)
