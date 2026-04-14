@@ -1,5 +1,6 @@
 import { apiFetch } from './api';
 import type {
+  ConversationSessionHistoryApiResponse,
   CountryApiItem,
   FeedbackApiResponse,
   MessageApiItem,
@@ -65,6 +66,14 @@ export async function fetchSessionFeedback(sessionId: string): Promise<FeedbackA
   const response = await apiFetch(`/conversation-sessions/${sessionId}/feedback`);
   if (!response.ok) {
     throw new Error('Failed to load feedback');
+  }
+  return response.json();
+}
+
+export async function fetchMyConversationHistory(): Promise<ConversationSessionHistoryApiResponse[]> {
+  const response = await apiFetch('/me/conversation-sessions');
+  if (!response.ok) {
+    throw new Error('Failed to load conversation history');
   }
   return response.json();
 }

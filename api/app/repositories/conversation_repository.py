@@ -1,10 +1,11 @@
 from datetime import UTC, datetime
 
 from sqlalchemy import Select, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.conversation_session import ConversationSession, ConversationSessionStatus
 from app.models.message import Message
+from app.models.scenario import Scenario
 
 
 class ConversationRepository:
@@ -52,6 +53,19 @@ class ConversationRepository:
         session.ended_at = datetime.now(UTC)
         db.flush()
         return session
+
+    def list_sessions_for_user(self, db: Session, *, user_id: str) -> list[ConversationSession]:
+        stmt: Select[tuple[ConversationSession]] = (
+            select(ConversationSession)
+            .where(ConversationSession.user_id == user_id)
+            .options(
+                selectinload(ConversationSession.scenario).selectinload(Scenario.country),
+                selectinload(ConversationSession.feedback),
+                selectinload(ConversationSession.messages),
+            )
+            .order_by(ConversationSession.started_at.desc(), ConversationSession.id.desc())
+        )
+        return list(db.scalars(stmt))
 
     def create_message(self, db: Session, *, session_id: str, role: str, content: str) -> Message:
         message = Message(session_id=session_id, role=role, content=content)
