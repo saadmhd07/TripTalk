@@ -122,3 +122,11 @@ export async function updateMyLanguageLevel(
   }
   return response.json();
 }
+
+export async function fetchMyLanguageLevels(): Promise<UserLanguageLevelApiResponse[]> {
+  const response = await apiFetch('/me/language-levels');
+  if (!response.ok) {
+    throw new Error('Failed to load language levels');
+  }
+  return response.json();
+}

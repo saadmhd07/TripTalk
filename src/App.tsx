@@ -7,11 +7,13 @@ import { OnboardingOne } from './components/OnboardingOne';
 import { OnboardingTwo } from './components/OnboardingTwo';
 import { LevelSelection } from './components/LevelSelection';
 import { HistoryScreen } from './components/HistoryScreen';
+import { AppShell } from './components/AppShell';
 import { CountrySelection } from './components/CountrySelection';
 import { CulturalSummary } from './components/CulturalSummary';
 import { ScenarioSelection } from './components/ScenarioSelection';
 import { ConversationScreen } from './components/ConversationScreen';
 import { FeedbackScreen } from './components/FeedbackScreen';
+import { ProfileScreen } from './components/ProfileScreen';
 import { getLanguageLabel } from './lib/presentation';
 import {
   createConversationSession,
@@ -77,6 +79,22 @@ export default function App() {
     setHistoryItems([]);
     setHistoryLoading(false);
     setHistoryError(null);
+  }
+
+  function getActiveSection(): 'explorer' | 'history' | 'profile' | 'conversation' {
+    if (currentScreen === 'history') {
+      return 'history';
+    }
+
+    if (currentScreen === 'profile') {
+      return 'profile';
+    }
+
+    if (currentScreen === 'conversation' || currentScreen === 'feedback') {
+      return 'conversation';
+    }
+
+    return 'explorer';
   }
 
   useEffect(() => {
@@ -224,6 +242,25 @@ export default function App() {
     setCurrentScreen('history');
   }
 
+  function openProfile() {
+    setCurrentScreen('profile');
+  }
+
+  function openExplorer() {
+    setCurrentScreen(selectedCountry ? 'scenario' : 'country');
+  }
+
+  function startNewConversation() {
+    setSelectedLevel(null);
+    setSelectedCountry(null);
+    setSelectedCountryId(null);
+    setSelectedScenario(null);
+    setSessionId(null);
+    setProfileError(null);
+    setLevelContext('scenario');
+    setCurrentScreen('country');
+  }
+
   function handleOpenConversationFromHistory(item: ConversationSessionHistoryApiResponse) {
     setSelectedCountry(item.country_name);
     setSelectedScenario({
@@ -278,39 +315,28 @@ export default function App() {
     );
   }
 
+  if (currentScreen === 'splash') {
+    return <SplashScreen onStart={() => setCurrentScreen('onboarding1')} />;
+  }
+
+  if (currentScreen === 'onboarding1') {
+    return <OnboardingOne onNext={() => setCurrentScreen('onboarding2')} />;
+  }
+
+  if (currentScreen === 'onboarding2') {
+    return <OnboardingTwo onNext={() => setCurrentScreen('country')} />;
+  }
+
   return (
-    <div className="min-h-screen bg-neutral-50">
-      {session && (
-        <div className="absolute right-6 top-6 z-10 flex items-center gap-3 rounded-2xl bg-white/95 px-4 py-3 shadow-lg">
-          <div className="text-right">
-            <p className="text-xs uppercase tracking-wide text-gray-400">Connecté</p>
-            <p className="text-sm text-gray-700">{profile?.email ?? session.user.email}</p>
-          </div>
-          <button
-            type="button"
-            onClick={openHistory}
-            className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-600 transition hover:border-gray-300 hover:text-gray-900"
-          >
-            Historique
-          </button>
-          <button
-            type="button"
-            onClick={() => void handleSignOut()}
-            className="rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-600 transition hover:border-gray-300 hover:text-gray-900"
-          >
-            Déconnexion
-          </button>
-        </div>
-      )}
-      {currentScreen === 'splash' && (
-        <SplashScreen onStart={() => setCurrentScreen('onboarding1')} />
-      )}
-      {currentScreen === 'onboarding1' && (
-        <OnboardingOne onNext={() => setCurrentScreen('onboarding2')} />
-      )}
-      {currentScreen === 'onboarding2' && (
-        <OnboardingTwo onNext={() => setCurrentScreen('country')} />
-      )}
+    <AppShell
+      activeSection={getActiveSection()}
+      userEmail={profile?.email ?? session?.user.email ?? ''}
+      onGoExplorer={openExplorer}
+      onGoHistory={openHistory}
+      onGoProfile={openProfile}
+      onNewConversation={startNewConversation}
+      onSignOut={() => void handleSignOut()}
+    >
       {currentScreen === 'level' && (
         <LevelSelection
           selectedLevel={selectedLevel}
@@ -325,6 +351,12 @@ export default function App() {
           scenarioTitle={levelContext === 'scenario' ? selectedScenario?.title : undefined}
         />
       )}
+      {currentScreen === 'profile' && (
+        <ProfileScreen
+          profile={profile}
+          onProfileUpdated={setProfile}
+        />
+      )}
       {currentScreen === 'history' && (
         <HistoryScreen
           items={historyItems}
@@ -333,7 +365,7 @@ export default function App() {
           onOpenConversation={handleOpenConversationFromHistory}
           onOpenFeedback={handleOpenFeedbackFromHistory}
           onRefresh={() => void loadHistory()}
-          onStartNew={() => setCurrentScreen('country')}
+          onStartNew={startNewConversation}
         />
       )}
       {currentScreen === 'country' && (
@@ -373,6 +405,6 @@ export default function App() {
           onChangeCountry={() => setCurrentScreen('country')}
         />
       )}
-    </div>
+    </AppShell>
   );
 }
