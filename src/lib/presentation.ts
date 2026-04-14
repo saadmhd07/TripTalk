@@ -34,7 +34,7 @@ export const scenarioPresentation = {
       iconColor: 'text-amber-500',
     },
     {
-      slug: 'rencontre-coloc',
+      slug: 'conversation-libre-chili',
       icon: Home,
       color: 'bg-emerald-50 text-emerald-700',
       iconColor: 'text-emerald-500',
@@ -54,7 +54,7 @@ export const scenarioPresentation = {
       iconColor: 'text-orange-500',
     },
     {
-      slug: 'campus-meetup',
+      slug: 'free-talk-usa',
       icon: Users,
       color: 'bg-purple-50 text-purple-700',
       iconColor: 'text-purple-500',
@@ -86,3 +86,17 @@ export const conversationAvatarPresentation = {
   bgColor: string;
   role: string;
 }>;
+
+export const languageLabelPresentation: Record<string, string> = {
+  en: 'Anglais',
+  es: 'Espagnol',
+  fr: 'Français',
+  de: 'Allemand',
+  it: 'Italien',
+  pt: 'Portugais',
+  ja: 'Japonais',
+};
+
+export function getLanguageLabel(languageCode: string): string {
+  return languageLabelPresentation[languageCode.toLowerCase()] ?? languageCode.toUpperCase();
+}

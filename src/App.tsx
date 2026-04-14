@@ -11,7 +11,14 @@ import { CulturalSummary } from './components/CulturalSummary';
 import { ScenarioSelection } from './components/ScenarioSelection';
 import { ConversationScreen } from './components/ConversationScreen';
 import { FeedbackScreen } from './components/FeedbackScreen';
-import { createConversationSession, fetchMyProfile, updateMyProfile } from './lib/triptalk-api';
+import { getLanguageLabel } from './lib/presentation';
+import {
+  createConversationSession,
+  fetchMyLanguageLevel,
+  fetchMyProfile,
+  updateMyLanguageLevel,
+  updateMyProfile,
+} from './lib/triptalk-api';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import type {
   Country,
@@ -34,6 +41,7 @@ export default function App() {
   const [profileReady, setProfileReady] = useState(!isSupabaseConfigured);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [isSavingLevel, setIsSavingLevel] = useState(false);
+  const [levelContext, setLevelContext] = useState<'onboarding' | 'scenario'>('onboarding');
 
   function resetFlowState() {
     setCurrentScreen('splash');
@@ -46,6 +54,7 @@ export default function App() {
     setProfileError(null);
     setProfileReady(!isSupabaseConfigured);
     setIsSavingLevel(false);
+    setLevelContext('onboarding');
   }
 
   useEffect(() => {
@@ -75,7 +84,6 @@ export default function App() {
       setProfile(null);
       setProfileReady(true);
       setProfileError(null);
-      setSelectedLevel(null);
       return;
     }
 
@@ -92,13 +100,6 @@ export default function App() {
         }
 
         setProfile(nextProfile);
-        if (
-          nextProfile.level === 'Débutant' ||
-          nextProfile.level === 'Intermédiaire' ||
-          nextProfile.level === 'Avancé'
-        ) {
-          setSelectedLevel(nextProfile.level);
-        }
       } catch {
         if (!ignore) {
           setProfileError('Impossible de charger le profil utilisateur.');
@@ -121,18 +122,27 @@ export default function App() {
   const handleLevelSelect = async (level: Exclude<Level, null>) => {
     setSelectedLevel(level);
     setProfileError(null);
+    if (levelContext === 'onboarding') {
+      setCurrentScreen('country');
+      return;
+    }
+
+    if (!selectedScenario) {
+      setProfileError("Impossible de retrouver le scénario sélectionné.");
+      return;
+    }
 
     try {
       setIsSavingLevel(true);
-      const updatedProfile = await updateMyProfile({ level });
-      setProfile(updatedProfile);
+      await updateMyLanguageLevel(selectedScenario.language_code, level);
+      const createdSession = await createConversationSession(selectedScenario.id, level);
+      setSessionId(createdSession.id);
+      setCurrentScreen('conversation');
     } catch {
-      setProfileError("Impossible d'enregistrer le niveau pour le moment.");
+      setProfileError("Impossible d'enregistrer le niveau pour cette langue.");
     } finally {
       setIsSavingLevel(false);
     }
-
-    setCurrentScreen('country');
   };
 
   const handleCountrySelect = (country: Exclude<Country, null>, countryId: number) => {
@@ -142,10 +152,28 @@ export default function App() {
   };
 
   const handleScenarioSelect = async (scenario: SelectedScenario) => {
-    const session = await createConversationSession(scenario.id);
     setSelectedScenario(scenario);
-    setSessionId(session.id);
-    setCurrentScreen('conversation');
+    setProfileError(null);
+    setLevelContext('scenario');
+
+    try {
+      const languageLevel = await fetchMyLanguageLevel(scenario.language_code);
+      const nextLevel = languageLevel?.level;
+      if (
+        nextLevel === 'Débutant' ||
+        nextLevel === 'Intermédiaire' ||
+        nextLevel === 'Avancé'
+      ) {
+        setSelectedLevel(nextLevel);
+      } else {
+        setSelectedLevel(null);
+      }
+    } catch {
+      setSelectedLevel(null);
+      setProfileError("Impossible de charger le niveau pour cette langue.");
+    }
+
+    setCurrentScreen('level');
   };
 
   async function handleSignOut() {
@@ -200,7 +228,7 @@ export default function App() {
         <OnboardingOne onNext={() => setCurrentScreen('onboarding2')} />
       )}
       {currentScreen === 'onboarding2' && (
-        <OnboardingTwo onNext={() => setCurrentScreen('level')} />
+        <OnboardingTwo onNext={() => setCurrentScreen('country')} />
       )}
       {currentScreen === 'level' && (
         <LevelSelection
@@ -208,6 +236,12 @@ export default function App() {
           onSelect={(level) => void handleLevelSelect(level)}
           isSaving={isSavingLevel}
           error={profileError}
+          languageLabel={
+            selectedScenario?.language_code
+              ? getLanguageLabel(selectedScenario.language_code)
+              : undefined
+          }
+          scenarioTitle={levelContext === 'scenario' ? selectedScenario?.title : undefined}
         />
       )}
       {currentScreen === 'country' && (
@@ -223,7 +257,7 @@ export default function App() {
         <ScenarioSelection 
           country={selectedCountry!}
           countryId={selectedCountryId!}
-          onSelect={handleScenarioSelect}
+          onSelect={(scenario) => void handleScenarioSelect(scenario)}
         />
       )}
       {currentScreen === 'conversation' && (
