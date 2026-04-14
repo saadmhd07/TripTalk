@@ -32,13 +32,19 @@ def create_conversation_session(
         user_id=str(claims.get("sub")),
         email=str(claims.get("email")),
     )
-    session = conversation_repository.create_session(db, user_id=user.id, scenario_id=scenario.id)
+    session = conversation_repository.create_session(
+        db,
+        user_id=user.id,
+        scenario_id=scenario.id,
+        level_at_start=payload.level_at_start,
+    )
     db.commit()
 
     return ConversationSessionRead(
         id=session.id,
         scenario_id=session.scenario_id,
         status=ConversationSessionStatus(session.status),
+        level_at_start=session.level_at_start,
         started_at=session.started_at,
         ended_at=session.ended_at,
     )
@@ -58,6 +64,7 @@ def get_conversation_session(
         id=session.id,
         scenario_id=session.scenario_id,
         status=ConversationSessionStatus(session.status),
+        level_at_start=session.level_at_start,
         started_at=session.started_at,
         ended_at=session.ended_at,
     )
@@ -80,6 +87,7 @@ def complete_conversation_session(
         id=session.id,
         scenario_id=session.scenario_id,
         status=ConversationSessionStatus(session.status),
+        level_at_start=session.level_at_start,
         started_at=session.started_at,
         ended_at=session.ended_at,
     )

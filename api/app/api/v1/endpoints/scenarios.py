@@ -22,7 +22,9 @@ def list_country_scenarios(
             slug=scenario.slug,
             title=scenario.title,
             description=scenario.description,
+            language_code=scenario.language_code,
             difficulty=scenario.difficulty,
+            mode=scenario.mode,
             is_active=scenario.is_active,
         )
         for scenario in scenarios
@@ -47,6 +49,8 @@ def get_scenario(
         slug=scenario.slug,
         title=scenario.title,
         description=scenario.description,
+        language_code=scenario.language_code,
         difficulty=scenario.difficulty,
+        mode=scenario.mode,
         is_active=scenario.is_active,
     )

@@ -7,5 +7,7 @@ class ScenarioRead(BaseModel):
     slug: str
     title: str
     description: str
+    language_code: str
     difficulty: str
+    mode: str
     is_active: bool

@@ -6,7 +6,7 @@ TripTalk is not aiming to be a generic language-learning chatbot.
 
 The product direction is an AI tandem for travel and cultural immersion:
 
-- a user arrives and chooses a target language
+- a user arrives and chooses a country
 - the app offers scenario-based practice and eventually a freer conversation mode
 - the user talks to an AI partner with a specific cultural identity
 - that partner should feel local, not generic: accent, expressions, social norms, and references should reflect a real place
@@ -24,7 +24,7 @@ For TripTalk, the main entry point is closer to a country or cultural context th
 For that reason, the MVP product model should be:
 
 - `User`
-- `ConversationContext`
+- `UserLanguageLevel`
 - `Scenario`
 - `ConversationSession`
 - `Message`
@@ -44,51 +44,45 @@ Recommended MVP fields:
 Notes:
 
 - `country` should not be modeled as a fixed global user property for now
-- `level` should not be treated as a permanent global truth long term
-- `target_language` is not the main product concept unless later product direction changes
+- `level` should not be treated as a permanent global truth across all languages
+- `target_language` is not the main entry concept unless later product direction changes
 
-### 2. ConversationContext
+### 2. UserLanguageLevel
 
-This is the main product differentiator.
+This stores the user's level per language.
 
-It represents the cultural world, local identity, and conversational framing the user is entering.
+Recommended MVP fields:
+
+- `id`
+- `user_id`
+- `language_code`
+- `level`
+- `updated_at`
+
+Examples:
+
+- Spanish: intermediate
+- English: advanced
+- Japanese: beginner
+
+Notes:
+
+- level belongs more naturally to a language than to the user globally
+- when a session starts, the app can preload the stored level for the scenario language
+- the user should still be allowed to adjust that level before entering the conversation
+
+### 3. Scenario
+
+Scenarios belong to a country and define the actual language used in the conversation.
 
 Recommended MVP fields:
 
 - `id`
 - `country_id`
-- `title`
-- `language_code`
-- `persona_name`
-- `persona_role`
-- `persona_style`
-- `accent_label`
-- `cultural_notes`
-- `core_vocab`
-- `is_active`
-
-Examples:
-
-- Chile / local friend / Santiago / casual Chilean Spanish
-- USA / barista / New York / friendly American English
-- Japan / host family member / Osaka / warm informal Japanese
-
-Important note:
-
-- a country alone may be enough for the first MVP
-- but the longer-term product should evolve toward country + persona, not country alone
-
-### 3. Scenario
-
-Scenarios belong to a conversation context.
-
-Recommended MVP fields:
-
-- `id`
-- `context_id`
 - `slug`
 - `title`
 - `description`
+- `language_code`
 - `difficulty`
 - `system_prompt`
 - `mode`
@@ -104,6 +98,12 @@ This allows both:
 - structured practice like airport, taxi, cafe, landlord, immigration
 - open-ended conversation with a culturally situated AI partner
 
+Important note:
+
+- the country is the entry point
+- the scenario determines the actual language of the session
+- this is important for multilingual countries where different scenarios may use different languages
+
 ### 4. ConversationSession
 
 This is the actual user conversation instance.
@@ -112,8 +112,9 @@ Recommended MVP fields:
 
 - `id`
 - `user_id`
-- `context_id`
-- `scenario_id` nullable for free mode
+- `country_id`
+- `scenario_id`
+- `language_code`
 - `status`
 - `level_at_start`
 - `started_at`
@@ -121,8 +122,9 @@ Recommended MVP fields:
 
 Notes:
 
-- `level` makes more sense here than as a permanent user property
-- if needed, the user profile can still keep a default level temporarily
+- `scenario_id` can still represent a free conversation scenario
+- free mode does not need a separate top-level entity if it is modeled as a scenario with `mode=free`
+- `level_at_start` captures the actual level used for this session
 - the session should capture the actual level used at the start of the conversation
 
 ### 5. Message
@@ -166,22 +168,26 @@ The product flow should evolve toward this:
 
 1. User signs in
 2. User optionally completes a lightweight profile
-3. User chooses a country or cultural context
-4. User chooses a guided scenario or free conversation mode
-5. User optionally selects a level for this session
-6. User talks with the AI partner
-7. User receives feedback
-8. User can later revisit conversation history
+3. User chooses a country
+4. User chooses a scenario for that country
+5. The app determines the scenario language
+6. The app preloads the user's saved level for that language
+7. User can adjust the level for this session
+8. User enters a guided or free conversation
+9. User receives feedback
+10. User can later revisit conversation history
 
 ## Modeling Decisions
 
 These are the working product decisions for now.
 
 - `native_language` belongs to the user profile
-- `country` is primarily a session or context choice, not a global user attribute
-- `target_language` is not the core product concept for the current vision
-- `level` should move toward session-level modeling, even if temporarily stored in the profile during MVP iteration
-- the real differentiator is cultural specificity and persona design, not generic language tutoring
+- `country` is the main entry point of the experience
+- `scenario` belongs to a country and defines the actual session language
+- `target_language` is not the core entry concept for the current vision
+- `level` should be modeled per language, then captured again at session start
+- a free conversation should be modeled as a scenario with `mode=free`
+- the real differentiator is cultural specificity inside scenarios, not generic language tutoring
 
 ## Current Status
 
@@ -311,12 +317,12 @@ This is the cleanup block we should address next.
 
 These are not blockers for local development, but they matter before launch.
 
-- [ ] Refine the country-first entry flow into a clearer country or cultural context selection model
+- [ ] Refine the country-first entry flow into a clearer country and scenario selection model
 - [ ] Proper user profile onboarding
 - [ ] Real user-specific history screen
 - [ ] Free conversation mode in addition to guided scenarios
 - [ ] Better feedback quality and consistency
-- [ ] Prompt refinement by level, country/context, scenario, and cultural persona
+- [ ] Prompt refinement by level, country, scenario, and language-specific cultural context
 - [ ] Better UX around loading, retry, and empty states
 - [ ] Session recovery if the browser reloads mid-conversation
 - [ ] Better conversation controls than the current simple text chat
@@ -338,7 +344,7 @@ These are not blockers for local development, but they matter before launch.
 - [ ] remove or restrict `DEV_MODE`
 - [ ] ensure all session and message ownership is tied to authenticated users
 - [ ] add `/me` and profile completion flow
-- [ ] define profile vs session model around target language, level, and conversation preferences
+- [ ] define profile vs session model around native language, per-language level, and conversation preferences
 - [ ] add user conversation history screen
 - [ ] improve feedback structure and prompt contracts
 
@@ -357,7 +363,7 @@ These are not blockers for local development, but they matter before launch.
 
 This is the order I recommend now:
 
-1. Define the MVP product model: profile, target language, level, country, scenario, free mode
+1. Define the MVP product model: profile, per-language level, country, scenario, free mode
 2. Add a real profile completion flow
 3. Add a user history page
 4. Improve backend logging and error handling

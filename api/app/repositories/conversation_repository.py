@@ -10,11 +10,19 @@ from app.models.message import Message
 class ConversationRepository:
     """Persistence helpers for sessions and messages."""
 
-    def create_session(self, db: Session, *, user_id: str, scenario_id: int) -> ConversationSession:
+    def create_session(
+        self,
+        db: Session,
+        *,
+        user_id: str,
+        scenario_id: int,
+        level_at_start: str | None = None,
+    ) -> ConversationSession:
         session = ConversationSession(
             user_id=user_id,
             scenario_id=scenario_id,
             status=ConversationSessionStatus.ACTIVE.value,
+            level_at_start=level_at_start,
         )
         db.add(session)
         db.flush()
