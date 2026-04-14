@@ -55,3 +55,19 @@ export interface FeedbackApiResponse {
   cultural_tip: string | null;
   created_at: string;
 }
+
+export interface UserProfileApiResponse {
+  id: string;
+  email: string | null;
+  display_name: string | null;
+  native_language: string | null;
+  target_language: string | null;
+  level: string | null;
+}
+
+export interface UserProfileUpdatePayload {
+  display_name?: string | null;
+  native_language?: string | null;
+  target_language?: string | null;
+  level?: string | null;
+}
