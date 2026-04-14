@@ -4,6 +4,8 @@ import type {
   FeedbackApiResponse,
   MessageApiItem,
   ScenarioApiItem,
+  UserProfileApiResponse,
+  UserProfileUpdatePayload,
 } from './types';
 
 export async function fetchCountries(): Promise<CountryApiItem[]> {
@@ -59,6 +61,27 @@ export async function fetchSessionFeedback(sessionId: string): Promise<FeedbackA
   const response = await apiFetch(`/conversation-sessions/${sessionId}/feedback`);
   if (!response.ok) {
     throw new Error('Failed to load feedback');
+  }
+  return response.json();
+}
+
+export async function fetchMyProfile(): Promise<UserProfileApiResponse> {
+  const response = await apiFetch('/me');
+  if (!response.ok) {
+    throw new Error('Failed to load user profile');
+  }
+  return response.json();
+}
+
+export async function updateMyProfile(
+  payload: UserProfileUpdatePayload
+): Promise<UserProfileApiResponse> {
+  const response = await apiFetch('/me/profile', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to update user profile');
   }
   return response.json();
 }

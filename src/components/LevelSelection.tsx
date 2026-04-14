@@ -1,10 +1,18 @@
 import { TrendingUp, BarChart3, Sparkles } from 'lucide-react';
 
 interface LevelSelectionProps {
+  selectedLevel: 'Débutant' | 'Intermédiaire' | 'Avancé' | null;
   onSelect: (level: 'Débutant' | 'Intermédiaire' | 'Avancé') => void;
+  isSaving?: boolean;
+  error?: string | null;
 }
 
-export function LevelSelection({ onSelect }: LevelSelectionProps) {
+export function LevelSelection({
+  selectedLevel,
+  onSelect,
+  isSaving = false,
+  error = null,
+}: LevelSelectionProps) {
   const levels = [
     {
       name: 'Débutant' as const,
@@ -51,7 +59,10 @@ export function LevelSelection({ onSelect }: LevelSelectionProps) {
               <button
                 key={level.name}
                 onClick={() => onSelect(level.name)}
-                className={`${level.bgColor} rounded-3xl p-10 shadow-lg hover:shadow-2xl transition-all text-center hover:scale-105`}
+                disabled={isSaving}
+                className={`${level.bgColor} rounded-3xl p-10 shadow-lg transition-all text-center hover:scale-105 hover:shadow-2xl disabled:cursor-not-allowed disabled:opacity-70 ${
+                  selectedLevel === level.name ? 'ring-2 ring-orange-400 ring-offset-4' : ''
+                }`}
               >
                 <div className="flex flex-col items-center gap-6">
                   <div className={`bg-gradient-to-br ${level.color} rounded-2xl p-6`}>
@@ -69,6 +80,16 @@ export function LevelSelection({ onSelect }: LevelSelectionProps) {
               </button>
             );
           })}
+        </div>
+
+        <div className="mt-8 text-center">
+          {selectedLevel && (
+            <p className="text-sm text-gray-500">
+              Niveau enregistré : <span className="font-medium text-gray-700">{selectedLevel}</span>
+            </p>
+          )}
+          {isSaving && <p className="mt-2 text-sm text-gray-500">Enregistrement du niveau...</p>}
+          {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
         </div>
       </div>
     </div>

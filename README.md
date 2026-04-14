@@ -2,6 +2,16 @@
 
 TripTalk is a language-learning MVP focused on travel scenarios.
 
+## Product Vision
+
+TripTalk is not meant to be just another language chatbot.
+
+The goal is to build an AI conversation partner that feels closer to a cultural tandem than to a generic tutor: a user chooses a target language, enters a scenario, and talks to a native-feeling character with a specific local identity, accent, vocabulary, and cultural context.
+
+The long-term product direction is an animated avatar that users can talk with naturally. The differentiation is not only language practice, but situated cultural immersion: preparing for a trip, an exchange semester, or a move by speaking with someone who feels like they are from that place.
+
+A concrete example behind the product is the experience of preparing for Chile: not just learning Spanish in the abstract, but hearing Chilean-style expressions, practicing realistic situations, and discovering local culture before arriving.
+
 The app currently supports:
 
 - user authentication with Supabase

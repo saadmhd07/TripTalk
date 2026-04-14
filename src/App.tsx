@@ -11,9 +11,15 @@ import { CulturalSummary } from './components/CulturalSummary';
 import { ScenarioSelection } from './components/ScenarioSelection';
 import { ConversationScreen } from './components/ConversationScreen';
 import { FeedbackScreen } from './components/FeedbackScreen';
-import { createConversationSession } from './lib/triptalk-api';
+import { createConversationSession, fetchMyProfile, updateMyProfile } from './lib/triptalk-api';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
-import type { Country, Level, Screen, SelectedScenario } from './lib/types';
+import type {
+  Country,
+  Level,
+  Screen,
+  SelectedScenario,
+  UserProfileApiResponse,
+} from './lib/types';
 
 export default function App() {
   const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
@@ -24,6 +30,10 @@ export default function App() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [authReady, setAuthReady] = useState(!isSupabaseConfigured);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<UserProfileApiResponse | null>(null);
+  const [profileReady, setProfileReady] = useState(!isSupabaseConfigured);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [isSavingLevel, setIsSavingLevel] = useState(false);
 
   function resetFlowState() {
     setCurrentScreen('splash');
@@ -32,6 +42,10 @@ export default function App() {
     setSelectedCountryId(null);
     setSelectedScenario(null);
     setSessionId(null);
+    setProfile(null);
+    setProfileError(null);
+    setProfileReady(!isSupabaseConfigured);
+    setIsSavingLevel(false);
   }
 
   useEffect(() => {
@@ -56,8 +70,68 @@ export default function App() {
     };
   }, []);
 
-  const handleLevelSelect = (level: Level) => {
+  useEffect(() => {
+    if (isSupabaseConfigured && !session) {
+      setProfile(null);
+      setProfileReady(true);
+      setProfileError(null);
+      setSelectedLevel(null);
+      return;
+    }
+
+    let ignore = false;
+
+    async function loadProfile() {
+      setProfileReady(false);
+      setProfileError(null);
+
+      try {
+        const nextProfile = await fetchMyProfile();
+        if (ignore) {
+          return;
+        }
+
+        setProfile(nextProfile);
+        if (
+          nextProfile.level === 'Débutant' ||
+          nextProfile.level === 'Intermédiaire' ||
+          nextProfile.level === 'Avancé'
+        ) {
+          setSelectedLevel(nextProfile.level);
+        }
+      } catch {
+        if (!ignore) {
+          setProfileError('Impossible de charger le profil utilisateur.');
+          setProfile(null);
+        }
+      } finally {
+        if (!ignore) {
+          setProfileReady(true);
+        }
+      }
+    }
+
+    void loadProfile();
+
+    return () => {
+      ignore = true;
+    };
+  }, [session]);
+
+  const handleLevelSelect = async (level: Exclude<Level, null>) => {
     setSelectedLevel(level);
+    setProfileError(null);
+
+    try {
+      setIsSavingLevel(true);
+      const updatedProfile = await updateMyProfile({ level });
+      setProfile(updatedProfile);
+    } catch {
+      setProfileError("Impossible d'enregistrer le niveau pour le moment.");
+    } finally {
+      setIsSavingLevel(false);
+    }
+
     setCurrentScreen('country');
   };
 
@@ -94,13 +168,21 @@ export default function App() {
     return <AuthScreen onAuthenticated={() => undefined} />;
   }
 
+  if (!profileReady) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50 text-gray-500">
+        Chargement du profil...
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50">
       {session && (
         <div className="absolute right-6 top-6 z-10 flex items-center gap-3 rounded-2xl bg-white/95 px-4 py-3 shadow-lg">
           <div className="text-right">
             <p className="text-xs uppercase tracking-wide text-gray-400">Connecté</p>
-            <p className="text-sm text-gray-700">{session.user.email}</p>
+            <p className="text-sm text-gray-700">{profile?.email ?? session.user.email}</p>
           </div>
           <button
             type="button"
@@ -121,7 +203,12 @@ export default function App() {
         <OnboardingTwo onNext={() => setCurrentScreen('level')} />
       )}
       {currentScreen === 'level' && (
-        <LevelSelection onSelect={handleLevelSelect} />
+        <LevelSelection
+          selectedLevel={selectedLevel}
+          onSelect={(level) => void handleLevelSelect(level)}
+          isSaving={isSavingLevel}
+          error={profileError}
+        />
       )}
       {currentScreen === 'country' && (
         <CountrySelection onSelect={handleCountrySelect} />
