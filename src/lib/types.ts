@@ -4,6 +4,7 @@ export type Screen =
   | 'onboarding2'
   | 'level'
   | 'history'
+  | 'profile'
   | 'country'
   | 'cultural'
   | 'scenario'
