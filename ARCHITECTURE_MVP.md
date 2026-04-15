@@ -172,7 +172,7 @@ Recommended MVP fields:
 The product flow should evolve toward this:
 
 1. User signs in
-2. User optionally completes a lightweight profile
+2. User lands on `Explorer`
 3. User chooses a country
 4. User chooses a scenario for that country
 5. The app determines the scenario language
@@ -313,6 +313,15 @@ Recommended order:
 5. Keep `Conversation` and `Historique` inside the shared shell
 6. Reduce or remove the older fullscreen onboarding flow
 
+Current status:
+
+- [x] Shared desktop `AppShell`
+- [x] Top navigation and app-level route/state handling
+- [x] `Explorer` page replacing the older selection wizard
+- [x] `Profil` page
+- [x] `Conversation` and `Historique` inside the shared shell
+- [x] Older fullscreen onboarding flow removed from the active UI
+
 ## Modeling Decisions
 
 These are the working product decisions for now.
@@ -349,9 +358,7 @@ The codebase is no longer just a generated UI mock. The main product loop works 
 
 ### Product Flow
 
-- [x] Splash and onboarding flow
-- [x] Country selection
-- [x] Scenario selection
+- [x] Explorer page with country, scenario, and session preparation
 - [x] Free conversation scenario support
 - [x] Scenario language-aware flow
 - [x] Session level selection after scenario choice
@@ -375,6 +382,13 @@ The codebase is no longer just a generated UI mock. The main product loop works 
 - [x] Load per-language level after scenario selection
 - [x] Stop depending on hardcoded `Chile` / `USA` flow assumptions
 - [x] Use scenario-driven content in conversation view when available
+- [x] Shared desktop shell with top navigation
+- [x] Real `Explorer` page
+- [x] Real `Profil` page
+- [x] History page inside the shell
+- [x] Conversation page inside the shell
+- [x] Feedback page aligned with the shell
+- [x] Remove older fullscreen onboarding and selection components from the active UI
 
 ### Backend
 
@@ -469,18 +483,18 @@ This is the cleanup block we should address next.
 
 These are not blockers for local development, but they matter before launch.
 
-- [ ] Refine the country-first entry flow into a clearer country and scenario selection model
-- [ ] Proper user profile onboarding
-- [ ] Real user-specific history screen
+- [x] Refine the country-first entry flow into a clearer country and scenario selection model
+- [ ] Proper user profile onboarding if still needed after login
+- [x] Real user-specific history screen
 - [x] Free conversation mode in addition to guided scenarios
 - [ ] Better feedback quality and consistency
 - [ ] Prompt refinement by level, country, scenario, and language-specific cultural context
 - [ ] Better UX around loading, retry, and empty states
 - [ ] Session recovery if the browser reloads mid-conversation
 - [ ] Better conversation controls than the current simple text chat
-- [ ] Shared desktop app shell with persistent top navigation
-- [ ] Real `Explorer` page instead of a linear fullscreen flow
-- [ ] Real `Profil` page
+- [x] Shared desktop app shell with persistent top navigation
+- [x] Real `Explorer` page instead of a linear fullscreen flow
+- [x] Real `Profil` page
 - [ ] Voice and avatar interaction path for the longer-term product direction
 
 ## Suggested Roadmap
@@ -537,6 +551,10 @@ Recent implementation work completed:
 - added scenario content fields such as intro message, cultural tip, vocabulary hints, partner name, and partner role
 - updated the frontend flow so level is chosen after scenario selection
 - removed frontend assumptions that only `Chile` and `USA` exist
+- introduced a desktop shell with persistent top navigation
+- replaced the older fullscreen selection wizard with a real `Explorer` page
+- added `Profil`, `Historique`, `Conversation`, and `Feedback` as first-class app sections
+- removed the old fullscreen onboarding and selection components from the active UI
 
 ## Environment Variables
 
