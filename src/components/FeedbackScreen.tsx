@@ -1,5 +1,15 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Lightbulb, BookOpen, RotateCcw, List, Globe, TrendingUp, Award } from 'lucide-react';
+import {
+  ArrowLeft,
+  Award,
+  BookOpen,
+  CheckCircle2,
+  Globe,
+  Lightbulb,
+  List,
+  RotateCcw,
+  TrendingUp,
+} from 'lucide-react';
 
 import { fetchSessionFeedback } from '../lib/triptalk-api';
 import type { FeedbackApiResponse } from '../lib/types';
@@ -50,147 +60,163 @@ export function FeedbackScreen({ sessionId, onRetry, onNewScenario, onChangeCoun
   const fluencyScore = feedback?.fluency_score ?? 0;
 
   return (
-    <div className="min-h-screen p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center justify-center w-24 h-24 bg-green-100 rounded-full mb-6">
-            <CheckCircle2 className="w-12 h-12 text-green-600" strokeWidth={2} />
-          </div>
-          <h2 className="text-gray-800 text-5xl mb-3">
-            Bravo !
-          </h2>
-          <p className="text-gray-500 text-xl">
-            Voici ton feedback personnalisé
-          </p>
-        </div>
-
-        <div className="grid grid-cols-12 gap-8">
-          {/* Left Column - Stats */}
-          <div className="col-span-3 space-y-6">
-            <div className="bg-gradient-to-br from-green-400 to-emerald-400 rounded-3xl shadow-lg p-6 text-white">
-              <Award className="w-10 h-10 mb-4" strokeWidth={2} />
-              <h4 className="text-3xl mb-2">{globalScore}%</h4>
-              <p className="text-white/90">Score global</p>
-            </div>
-
-            <div className="bg-white rounded-3xl shadow-lg p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <TrendingUp className="w-6 h-6 text-orange-500" strokeWidth={2} />
-                <h4 className="text-gray-800 text-lg">Progression</h4>
+    <div className="space-y-6">
+      <section className="overflow-hidden rounded-[2rem] bg-white shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-gray-100 px-6 py-5">
+          <div>
+            <button
+              type="button"
+              onClick={onRetry}
+              className="mb-4 inline-flex items-center gap-2 rounded-xl border border-gray-200 px-3 py-2 text-sm text-gray-600 transition hover:border-gray-300 hover:text-gray-900"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Retour à la conversation
+            </button>
+            <div className="flex items-center gap-4">
+              <div className="inline-flex h-16 w-16 items-center justify-center rounded-3xl bg-emerald-100 text-emerald-600">
+                <CheckCircle2 className="h-8 w-8" />
               </div>
-              <div className="space-y-3">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Vocabulaire</span>
-                    <span className="text-gray-800">{vocabularyScore}%</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full">
-                    <div className="h-2 bg-orange-500 rounded-full" style={{width: `${vocabularyScore}%`}}></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-gray-600">Fluidité</span>
-                    <span className="text-gray-800">{fluencyScore}%</span>
-                  </div>
-                  <div className="h-2 bg-gray-200 rounded-full">
-                    <div className="h-2 bg-blue-500 rounded-full" style={{width: `${fluencyScore}%`}}></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Middle Column - Feedback */}
-          <div className="col-span-6 space-y-6">
-            {/* Linguistic Feedback */}
-            <div className="bg-blue-50 rounded-3xl shadow-lg p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <BookOpen className="w-7 h-7 text-blue-600" strokeWidth={2} />
-                <h3 className="text-blue-800 text-2xl">
-                  Feedback linguistique
-                </h3>
-              </div>
-              
-              <div className="space-y-4">
-                {loading && <div className="bg-white rounded-2xl p-5 text-gray-500">Chargement du feedback...</div>}
-                {error && <div className="bg-white rounded-2xl p-5 text-red-500">{error}</div>}
-                {!loading && !error && feedback?.strengths.map((strength, index) => (
-                  <div key={`strength-${index}`} className="bg-white rounded-2xl p-5">
-                    <p className="text-gray-700 text-base mb-1">
-                      <span className="text-blue-600 text-xl">✓</span> {strength}
-                    </p>
-                  </div>
-                ))}
-                {!loading && !error && feedback?.improvements.map((improvement, index) => (
-                  <div key={`improvement-${index}`} className="bg-white rounded-2xl p-5">
-                    <p className="text-gray-700 text-base">
-                      <span className="text-orange-500 text-xl">→</span> {improvement}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Cultural Advice */}
-            <div className="bg-orange-50 rounded-3xl shadow-lg p-8">
-              <div className="flex items-center gap-3 mb-6">
-                <Lightbulb className="w-7 h-7 text-orange-600" strokeWidth={2} />
-                <h3 className="text-orange-800 text-2xl">
-                  Conseil culturel
-                </h3>
-              </div>
-              
-              <div className="bg-white rounded-2xl p-5">
-                <p className="text-gray-700 text-base leading-relaxed">
-                  {loading
-                    ? 'Chargement du conseil culturel...'
-                    : error
-                      ? 'Le conseil culturel est indisponible pour le moment.'
-                      : feedback?.cultural_tip}
+              <div>
+                <h1 className="text-3xl text-gray-900">Feedback de session</h1>
+                <p className="mt-1 text-gray-500">
+                  Un récapitulatif clair de ta performance linguistique et culturelle.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Right Column - Actions */}
-          <div className="col-span-3 space-y-4">
-            <button
-              onClick={onRetry}
-              className="w-full bg-gradient-to-r from-orange-500 to-rose-500 text-white py-5 rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-3 text-lg hover:scale-105"
-            >
-              <RotateCcw className="w-6 h-6" strokeWidth={2} />
-              Refaire
-            </button>
-            
-            <button
-              onClick={onNewScenario}
-              className="w-full bg-white text-gray-700 py-5 rounded-2xl shadow-lg hover:shadow-xl transition-all border border-gray-200 flex items-center justify-center gap-3 text-lg hover:scale-105"
-            >
-              <List className="w-6 h-6" strokeWidth={2} />
-              Autre scénario
-            </button>
-            
-            <button
-              onClick={onChangeCountry}
-              className="w-full bg-white text-gray-700 py-5 rounded-2xl shadow-lg hover:shadow-xl transition-all border border-gray-200 flex items-center justify-center gap-3 text-lg hover:scale-105"
-            >
-              <Globe className="w-6 h-6" strokeWidth={2} />
-              Changer de pays
-            </button>
-
-            <div className="mt-8 bg-gradient-to-br from-purple-100 to-pink-100 rounded-3xl shadow-lg p-6">
-              <h4 className="text-gray-800 text-lg mb-3">Prochain défi</h4>
-              <p className="text-gray-600 text-sm mb-4">
-                Essaie le scénario &quot;Commander dans un café&quot; pour pratiquer les expressions de la vie quotidienne
-              </p>
-              <button className="w-full bg-white text-purple-700 py-3 rounded-xl shadow-md hover:shadow-lg transition-all text-sm">
-                Commencer
-              </button>
-            </div>
+          <div className="rounded-[2rem] bg-gradient-to-br from-emerald-400 to-green-500 px-6 py-5 text-white shadow-lg">
+            <p className="text-xs uppercase tracking-[0.25em] text-white/75">Score global</p>
+            <p className="mt-2 text-5xl">{globalScore}%</p>
           </div>
         </div>
+      </section>
+
+      <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)_320px]">
+        <aside className="space-y-6">
+          <div className="rounded-[2rem] bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center gap-3">
+              <TrendingUp className="h-5 w-5 text-orange-500" />
+              <h2 className="text-lg text-gray-900">Progression</h2>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <div className="mb-2 flex justify-between text-sm">
+                  <span className="text-gray-600">Vocabulaire</span>
+                  <span className="text-gray-900">{vocabularyScore}%</span>
+                </div>
+                <div className="h-3 rounded-full bg-gray-200">
+                  <div className="h-3 rounded-full bg-orange-500" style={{ width: `${vocabularyScore}%` }} />
+                </div>
+              </div>
+              <div>
+                <div className="mb-2 flex justify-between text-sm">
+                  <span className="text-gray-600">Fluidité</span>
+                  <span className="text-gray-900">{fluencyScore}%</span>
+                </div>
+                <div className="h-3 rounded-full bg-gray-200">
+                  <div className="h-3 rounded-full bg-blue-500" style={{ width: `${fluencyScore}%` }} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center gap-3">
+              <Award className="h-5 w-5 text-emerald-500" />
+              <h2 className="text-lg text-gray-900">Lecture rapide</h2>
+            </div>
+            <p className="text-sm leading-relaxed text-gray-600">
+              Utilise ce feedback pour identifier ce que tu fais déjà bien, puis choisis un seul axe
+              d'amélioration pour la prochaine session.
+            </p>
+          </div>
+        </aside>
+
+        <section className="space-y-6">
+          <div className="rounded-[2rem] bg-blue-50 p-8 shadow-sm">
+            <div className="mb-6 flex items-center gap-3">
+              <BookOpen className="h-6 w-6 text-blue-600" />
+              <h2 className="text-2xl text-blue-900">Feedback linguistique</h2>
+            </div>
+
+            <div className="space-y-4">
+              {loading && <div className="rounded-2xl bg-white p-5 text-gray-500">Chargement du feedback...</div>}
+              {error && <div className="rounded-2xl bg-white p-5 text-red-500">{error}</div>}
+
+              {!loading && !error && feedback?.strengths.map((strength, index) => (
+                <div key={`strength-${index}`} className="rounded-2xl bg-white p-5 shadow-sm">
+                  <p className="text-gray-700">
+                    <span className="mr-2 text-blue-600">✓</span>
+                    {strength}
+                  </p>
+                </div>
+              ))}
+
+              {!loading && !error && feedback?.improvements.map((improvement, index) => (
+                <div key={`improvement-${index}`} className="rounded-2xl bg-white p-5 shadow-sm">
+                  <p className="text-gray-700">
+                    <span className="mr-2 text-orange-500">→</span>
+                    {improvement}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] bg-orange-50 p-8 shadow-sm">
+            <div className="mb-6 flex items-center gap-3">
+              <Lightbulb className="h-6 w-6 text-orange-600" />
+              <h2 className="text-2xl text-orange-900">Conseil culturel</h2>
+            </div>
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <p className="leading-relaxed text-gray-700">
+                {loading
+                  ? 'Chargement du conseil culturel...'
+                  : error
+                    ? 'Le conseil culturel est indisponible pour le moment.'
+                    : feedback?.cultural_tip}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <aside className="space-y-4">
+          <button
+            type="button"
+            onClick={onRetry}
+            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-orange-500 to-rose-500 px-5 py-4 text-white shadow-lg transition hover:shadow-xl"
+          >
+            <RotateCcw className="h-5 w-5" />
+            Revenir à la conversation
+          </button>
+
+          <button
+            type="button"
+            onClick={onNewScenario}
+            className="flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-4 text-gray-700 transition hover:border-gray-300 hover:text-gray-900"
+          >
+            <List className="h-5 w-5" />
+            Choisir un autre scénario
+          </button>
+
+          <button
+            type="button"
+            onClick={onChangeCountry}
+            className="flex w-full items-center justify-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-4 text-gray-700 transition hover:border-gray-300 hover:text-gray-900"
+          >
+            <Globe className="h-5 w-5" />
+            Changer de pays
+          </button>
+
+          <div className="rounded-[2rem] bg-gradient-to-br from-purple-100 to-pink-100 p-6 shadow-sm">
+            <h3 className="text-lg text-gray-900">Prochain réflexe</h3>
+            <p className="mt-3 text-sm leading-relaxed text-gray-600">
+              Repars sur une nouvelle session en gardant une amélioration précise en tête, plutôt
+              que d'essayer de tout corriger d'un coup.
+            </p>
+          </div>
+        </aside>
       </div>
     </div>
   );
