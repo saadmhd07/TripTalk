@@ -15,7 +15,10 @@ A concrete example behind the product is the experience of preparing for Chile: 
 The app currently supports:
 
 - user authentication with Supabase
-- country and scenario selection
+- desktop app shell with top navigation
+- explorer page for country, scenario, and session preparation
+- profile page with per-language level management
+- conversation history page
 - scenario language and mode metadata
 - per-language user level storage
 - conversation sessions persisted in PostgreSQL
@@ -253,7 +256,7 @@ http://localhost:3000
 ## Main Product Flow
 
 1. Sign up or sign in
-2. Complete lightweight onboarding
+2. Arrive directly on `Explorer`
 3. Choose a country
 4. Choose a scenario
 5. The app determines the scenario language
@@ -263,6 +266,7 @@ http://localhost:3000
 9. Send messages
 10. Receive AI replies
 11. Open the feedback screen
+12. Revisit sessions from `Historique`
 
 ## Recent Progress
 
@@ -274,8 +278,10 @@ Recent work on the MVP includes:
 - scenario `language_code` and `mode`
 - free conversation scenarios in the reference seed data
 - scenario-driven content fields such as intro message, cultural tip, vocabulary hints, partner name, and partner role
-- frontend flow updated to choose level after scenario selection
 - frontend generalized so it no longer only works for hardcoded countries
+- desktop app shell with `Explorer`, `Historique`, `Profil`, `Conversation`, and `Feedback`
+- explorer refactor replacing the older fullscreen wizard flow
+- legacy onboarding and selection components removed from the active UI
 
 ## Useful Commands
 
