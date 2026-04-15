@@ -2,26 +2,18 @@ import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 
 import { AuthScreen } from './components/AuthScreen';
-import { SplashScreen } from './components/SplashScreen';
-import { OnboardingOne } from './components/OnboardingOne';
-import { OnboardingTwo } from './components/OnboardingTwo';
-import { LevelSelection } from './components/LevelSelection';
 import { HistoryScreen } from './components/HistoryScreen';
+import { ExplorerScreen } from './components/ExplorerScreen';
 import { AppShell } from './components/AppShell';
-import { CountrySelection } from './components/CountrySelection';
-import { CulturalSummary } from './components/CulturalSummary';
-import { ScenarioSelection } from './components/ScenarioSelection';
 import { ConversationScreen } from './components/ConversationScreen';
 import { FeedbackScreen } from './components/FeedbackScreen';
 import { ProfileScreen } from './components/ProfileScreen';
-import { getLanguageLabel } from './lib/presentation';
 import {
   createConversationSession,
   fetchMyConversationHistory,
   fetchMyLanguageLevel,
   fetchMyProfile,
   updateMyLanguageLevel,
-  updateMyProfile,
 } from './lib/triptalk-api';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import type {
@@ -34,7 +26,7 @@ import type {
 } from './lib/types';
 
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('splash');
+  const [currentScreen, setCurrentScreen] = useState<Screen>('explorer');
   const [selectedLevel, setSelectedLevel] = useState<Level>(null);
   const [selectedCountry, setSelectedCountry] = useState<Country>(null);
   const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
@@ -45,8 +37,8 @@ export default function App() {
   const [profile, setProfile] = useState<UserProfileApiResponse | null>(null);
   const [profileReady, setProfileReady] = useState(!isSupabaseConfigured);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [isSavingLevel, setIsSavingLevel] = useState(false);
-  const [levelContext, setLevelContext] = useState<'onboarding' | 'scenario'>('onboarding');
+  const [isPreparingScenario, setIsPreparingScenario] = useState(false);
+  const [isStartingSession, setIsStartingSession] = useState(false);
   const [historyItems, setHistoryItems] = useState<ConversationSessionHistoryApiResponse[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
@@ -65,7 +57,7 @@ export default function App() {
   }
 
   function resetFlowState() {
-    setCurrentScreen('splash');
+    setCurrentScreen('explorer');
     setSelectedLevel(null);
     setSelectedCountry(null);
     setSelectedCountryId(null);
@@ -74,8 +66,8 @@ export default function App() {
     setProfile(null);
     setProfileError(null);
     setProfileReady(!isSupabaseConfigured);
-    setIsSavingLevel(false);
-    setLevelContext('onboarding');
+    setIsPreparingScenario(false);
+    setIsStartingSession(false);
     setHistoryItems([]);
     setHistoryLoading(false);
     setHistoryError(null);
@@ -172,42 +164,46 @@ export default function App() {
     }
   }
 
-  const handleLevelSelect = async (level: Exclude<Level, null>) => {
+  const handleLevelSelect = (level: Exclude<Level, null>) => {
     setSelectedLevel(level);
     setProfileError(null);
-    if (levelContext === 'onboarding') {
-      setCurrentScreen('country');
-      return;
-    }
+  };
 
+  async function handleStartConversation() {
     if (!selectedScenario) {
       setProfileError("Impossible de retrouver le scénario sélectionné.");
       return;
     }
+    if (!selectedLevel) {
+      setProfileError('Choisis un niveau avant de démarrer.');
+      return;
+    }
 
     try {
-      setIsSavingLevel(true);
-      await updateMyLanguageLevel(selectedScenario.language_code, level);
-      const createdSession = await createConversationSession(selectedScenario.id, level);
+      setIsStartingSession(true);
+      await updateMyLanguageLevel(selectedScenario.language_code, selectedLevel);
+      const createdSession = await createConversationSession(selectedScenario.id, selectedLevel);
       setSessionId(createdSession.id);
       setCurrentScreen('conversation');
     } catch {
       setProfileError("Impossible d'enregistrer le niveau pour cette langue.");
     } finally {
-      setIsSavingLevel(false);
+      setIsStartingSession(false);
     }
-  };
+  }
 
   const handleCountrySelect = (country: Exclude<Country, null>, countryId: number) => {
     setSelectedCountry(country);
     setSelectedCountryId(countryId);
-    setCurrentScreen('cultural');
+    setSelectedScenario(null);
+    setSelectedLevel(null);
+    setProfileError(null);
   };
 
   const handleScenarioSelect = async (scenario: SelectedScenario) => {
     setSelectedScenario(scenario);
     setProfileError(null);
-    setLevelContext('scenario');
+    setIsPreparingScenario(true);
 
     try {
       const languageLevel = await fetchMyLanguageLevel(scenario.language_code);
@@ -224,9 +220,9 @@ export default function App() {
     } catch {
       setSelectedLevel(null);
       setProfileError("Impossible de charger le niveau pour cette langue.");
+    } finally {
+      setIsPreparingScenario(false);
     }
-
-    setCurrentScreen('level');
   };
 
   async function handleSignOut() {
@@ -247,7 +243,7 @@ export default function App() {
   }
 
   function openExplorer() {
-    setCurrentScreen(selectedCountry ? 'scenario' : 'country');
+    setCurrentScreen('explorer');
   }
 
   function startNewConversation() {
@@ -257,8 +253,7 @@ export default function App() {
     setSelectedScenario(null);
     setSessionId(null);
     setProfileError(null);
-    setLevelContext('scenario');
-    setCurrentScreen('country');
+    setCurrentScreen('explorer');
   }
 
   function handleOpenConversationFromHistory(item: ConversationSessionHistoryApiResponse) {
@@ -315,18 +310,6 @@ export default function App() {
     );
   }
 
-  if (currentScreen === 'splash') {
-    return <SplashScreen onStart={() => setCurrentScreen('onboarding1')} />;
-  }
-
-  if (currentScreen === 'onboarding1') {
-    return <OnboardingOne onNext={() => setCurrentScreen('onboarding2')} />;
-  }
-
-  if (currentScreen === 'onboarding2') {
-    return <OnboardingTwo onNext={() => setCurrentScreen('country')} />;
-  }
-
   return (
     <AppShell
       activeSection={getActiveSection()}
@@ -337,24 +320,25 @@ export default function App() {
       onNewConversation={startNewConversation}
       onSignOut={() => void handleSignOut()}
     >
-      {currentScreen === 'level' && (
-        <LevelSelection
-          selectedLevel={selectedLevel}
-          onSelect={(level) => void handleLevelSelect(level)}
-          isSaving={isSavingLevel}
-          error={profileError}
-          languageLabel={
-            selectedScenario?.language_code
-              ? getLanguageLabel(selectedScenario.language_code)
-              : undefined
-          }
-          scenarioTitle={levelContext === 'scenario' ? selectedScenario?.title : undefined}
-        />
-      )}
       {currentScreen === 'profile' && (
         <ProfileScreen
           profile={profile}
           onProfileUpdated={setProfile}
+        />
+      )}
+      {currentScreen === 'explorer' && (
+        <ExplorerScreen
+          selectedCountry={selectedCountry}
+          selectedCountryId={selectedCountryId}
+          selectedScenario={selectedScenario}
+          selectedLevel={selectedLevel}
+          error={profileError}
+          isPreparingScenario={isPreparingScenario}
+          isStartingSession={isStartingSession}
+          onSelectCountry={handleCountrySelect}
+          onSelectScenario={(scenario) => void handleScenarioSelect(scenario)}
+          onSelectLevel={handleLevelSelect}
+          onStartConversation={() => void handleStartConversation()}
         />
       )}
       {currentScreen === 'history' && (
@@ -368,32 +352,19 @@ export default function App() {
           onStartNew={startNewConversation}
         />
       )}
-      {currentScreen === 'country' && (
-        <CountrySelection onSelect={handleCountrySelect} />
-      )}
-      {currentScreen === 'cultural' && (
-        <CulturalSummary 
-          country={selectedCountry!} 
-          onNext={() => setCurrentScreen('scenario')} 
-        />
-      )}
-      {currentScreen === 'scenario' && (
-        <ScenarioSelection 
-          country={selectedCountry!}
-          countryId={selectedCountryId!}
-          onSelect={(scenario) => void handleScenarioSelect(scenario)}
-        />
-      )}
       {currentScreen === 'conversation' && (
         <ConversationScreen 
           country={selectedCountry!}
           scenario={selectedScenario!.title}
           sessionId={sessionId!}
+          languageCode={selectedScenario?.language_code}
+          mode={selectedScenario?.mode}
           introMessage={selectedScenario?.intro_message}
           culturalTip={selectedScenario?.cultural_tip}
           vocabularyHints={parseVocabularyHints(selectedScenario?.vocabulary_hints)}
           partnerName={selectedScenario?.partner_name}
           partnerRole={selectedScenario?.partner_role}
+          onBackToExplorer={openExplorer}
           onFeedback={() => setCurrentScreen('feedback')}
         />
       )}
@@ -401,8 +372,8 @@ export default function App() {
         <FeedbackScreen 
           sessionId={sessionId!}
           onRetry={() => setCurrentScreen('conversation')}
-          onNewScenario={() => setCurrentScreen('scenario')}
-          onChangeCountry={() => setCurrentScreen('country')}
+          onNewScenario={openExplorer}
+          onChangeCountry={startNewConversation}
         />
       )}
     </AppShell>

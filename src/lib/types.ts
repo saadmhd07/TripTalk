@@ -1,13 +1,7 @@
 export type Screen =
-  | 'splash'
-  | 'onboarding1'
-  | 'onboarding2'
-  | 'level'
+  | 'explorer'
   | 'history'
   | 'profile'
-  | 'country'
-  | 'cultural'
-  | 'scenario'
   | 'conversation'
   | 'feedback';
 
