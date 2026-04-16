@@ -319,7 +319,6 @@ export default function App() {
       onGoExplorer={openExplorer}
       onGoHistory={openHistory}
       onGoProfile={openProfile}
-      onNewConversation={startNewConversation}
       onSignOut={() => void handleSignOut()}
     >
       {currentScreen === 'profile' && (

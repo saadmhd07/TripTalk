@@ -129,12 +129,12 @@ export function ExplorerScreen({
     <div className="grid min-h-[calc(100vh-180px)] gap-10 xl:grid-cols-[270px_minmax(0,1.7fr)_340px] xl:gap-12 2xl:grid-cols-[290px_minmax(0,1.9fr)_360px] 2xl:gap-14">
       <section className="rounded-[2rem] bg-white p-5 shadow-sm xl:sticky xl:top-28 xl:h-fit">
         <div className="mb-5 flex items-center gap-3">
-          <div className="rounded-2xl bg-orange-100 p-3 text-orange-600">
-            <Globe2 className="h-5 w-5" />
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-orange-500 text-sm font-bold text-white">
+            1
           </div>
           <div>
-            <h2 className="text-xl text-gray-900">Pays</h2>
-            <p className="text-sm text-gray-500">Choisis ton univers culturel</p>
+            <h2 className="text-xl text-gray-900">Choose a country</h2>
+            <p className="text-sm text-gray-500">Pick your destination</p>
           </div>
         </div>
 
@@ -154,10 +154,10 @@ export function ExplorerScreen({
                   key={country.id}
                   type="button"
                   onClick={() => onSelectCountry(country.name, country.id)}
-                  className={`w-full rounded-3xl border px-4 py-5 text-left transition ${
+                  className={`w-full cursor-pointer rounded-3xl border px-4 py-5 text-left transition-all ${
                     isActive
                       ? 'border-orange-300 bg-orange-50 shadow-sm'
-                      : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50'
+                      : 'border-gray-200 bg-white hover:border-orange-400 hover:shadow-md hover:-translate-y-0.5'
                   }`}
                 >
                   <div className="mb-3 flex items-center gap-3">
@@ -215,20 +215,22 @@ export function ExplorerScreen({
 
         <div className="rounded-[2rem] bg-white p-6 shadow-sm">
           <div className="mb-6 flex items-center gap-3">
-            <div className="rounded-2xl bg-blue-100 p-3 text-blue-600">
-              <Wand2 className="h-5 w-5" />
+            <div className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full text-lg font-bold ${
+              selectedCountry ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-400'
+            }`}>
+              2
             </div>
             <div>
-              <h2 className="text-2xl text-gray-900">Scénarios</h2>
+              <h2 className="text-2xl text-gray-900">Pick a scenario</h2>
               <p className="text-sm text-gray-500">
                 {selectedCountry
-                  ? `Choisis une situation pour ${selectedCountry}.`
-                  : 'Sélectionne un pays pour charger les scénarios.'}
+                  ? `Choose a situation to practice`
+                  : 'Select a country first'}
               </p>
             </div>
           </div>
 
-          <div className="grid gap-6 2xl:grid-cols-2">
+          <div className="grid auto-rows-fr gap-6 2xl:grid-cols-2">
             {selectedCountryId === null && (
               <p className="rounded-2xl bg-gray-50 p-5 text-gray-500 2xl:col-span-2">
                 Aucun pays sélectionné pour le moment.
@@ -253,10 +255,10 @@ export function ExplorerScreen({
                     type="button"
                     onClick={() => void handleScenarioPick(scenario)}
                     disabled={isPreparingScenario}
-                    className={`w-full rounded-3xl border p-6 text-left transition ${
+                    className={`w-full cursor-pointer rounded-3xl border p-6 text-left transition-all ${
                       isActive
                         ? 'border-orange-300 bg-orange-50 shadow-sm'
-                        : 'border-gray-100 bg-white hover:border-gray-200 hover:bg-gray-50'
+                        : 'border-gray-200 bg-white hover:border-orange-400 hover:shadow-md hover:-translate-y-0.5'
                     } disabled:cursor-not-allowed disabled:opacity-70`}
                   >
                     <div className="flex items-start gap-4">
@@ -361,7 +363,7 @@ export function ExplorerScreen({
               {culturalSummary.keywords.map((keyword, index) => {
                 const Icon = keyword.icon;
                 return (
-                  <div key={index} className={`${keyword.color} rounded-2xl p-4`}>
+                  <div key={index} className={`${keyword.color} cursor-default rounded-2xl p-4`}>
                     <div className="mb-3 inline-flex rounded-xl bg-white/80 p-2">
                       <Icon className="h-5 w-5" />
                     </div>

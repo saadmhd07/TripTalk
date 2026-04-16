@@ -8,7 +8,6 @@ interface AppShellProps {
   onGoExplorer: () => void;
   onGoHistory: () => void;
   onGoProfile: () => void;
-  onNewConversation: () => void;
   onSignOut: () => void;
 }
 
@@ -25,7 +24,6 @@ export function AppShell({
   onGoExplorer,
   onGoHistory,
   onGoProfile,
-  onNewConversation,
   onSignOut,
 }: AppShellProps) {
   return (
@@ -77,15 +75,6 @@ export function AppShell({
           </div>
 
           <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={onNewConversation}
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-rose-500 px-3 py-2 text-sm text-white shadow-lg transition hover:shadow-xl sm:px-4 sm:py-3 sm:text-base"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Nouvelle conversation</span>
-              <span className="sm:hidden">Nouveau</span>
-            </button>
             <div className="hidden rounded-2xl bg-white px-4 py-3 text-right shadow-sm md:block">
               <p className="text-xs uppercase tracking-wide text-gray-400">Connecté</p>
               <p className="text-sm text-gray-700">{userEmail}</p>
