@@ -1,11 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user_id, get_db_session
+from app.core.logging import get_logger
+from app.core.rate_limit import limiter
 from app.repositories.conversation_repository import ConversationRepository
 from app.repositories.scenario_repository import ScenarioRepository
 from app.schemas.message import MessageCreate, MessageRead, MessageRole
 from app.services.ai_service import AIService
+
+logger = get_logger(__name__)
 
 router = APIRouter()
 conversation_repository = ConversationRepository()
@@ -37,12 +41,16 @@ def list_messages(
 
 
 @router.post("/conversation-sessions/{session_id}/messages", response_model=list[MessageRead])
+@limiter.limit("20/minute")
 def create_message(
+    request: Request,
     session_id: str,
     payload: MessageCreate,
     user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_db_session),
 ) -> list[MessageRead]:
+    # Store user_id in request state for rate limiting
+    request.state.user_id = user_id
     session = conversation_repository.get_session_for_user(db, session_id=session_id, user_id=user_id)
     if session is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
@@ -64,16 +72,13 @@ def create_message(
         if message.role in {MessageRole.USER.value, MessageRole.ASSISTANT.value}
     ]
 
-    try:
-        assistant_content = ai_service.generate_conversation_reply(
-            system_prompt=scenario.system_prompt,
-            country_name=scenario.country.name if scenario.country else "Unknown",
-            scenario_title=scenario.title,
-            difficulty=scenario.difficulty,
-            history=history,
-        )
-    except Exception:
-        assistant_content = "I am having trouble responding right now. Please try again."
+    assistant_content = ai_service.generate_conversation_reply(
+        system_prompt=scenario.system_prompt,
+        country_name=scenario.country.name if scenario.country else "Unknown",
+        scenario_title=scenario.title,
+        difficulty=scenario.difficulty,
+        history=history,
+    )
 
     assistant_message = conversation_repository.create_message(
         db,

@@ -283,6 +283,57 @@ Recent work on the MVP includes:
 - explorer refactor replacing the older fullscreen wizard flow
 - legacy onboarding and selection components removed from the active UI
 
+## Current Status
+
+At this point, TripTalk is no longer a UI-only prototype.
+
+The project now has:
+
+- a coherent full-stack MVP loop
+- authenticated ownership on protected conversation resources
+- per-language user levels
+- scenario-driven metadata and cultural content
+- a navigable desktop-oriented UI shell
+- real user history and profile sections
+
+The main gaps are now less about structure and more about product quality:
+
+- feedback quality
+- prompt quality and scenario richness
+- session continuity and recovery
+- profile depth and preferences
+- catalog growth and content operations
+
+## Roadmap
+
+### Now
+
+- improve feedback quality and structure
+- improve scenario prompts and cultural specificity
+- improve the quality of seeded scenarios and conversation content
+- tighten session lifecycle behavior (`active`, `completed`, retries, feedback entry points)
+
+### Next
+
+- add better session continuity and resume behavior
+- improve loading, empty, and error states across the app
+- enrich the profile experience and user preferences
+- refine navigation between explorer, conversation, history, and feedback
+
+### Later
+
+- define a clearer content model for adding more countries and scenarios
+- make the catalog easier to extend and maintain
+- improve analytics and progression tracking
+- prepare production deployment and operational setup
+
+### Not Now
+
+- full voice interaction
+- animated avatar system
+- highly advanced personalization layers
+- broad production launch work before the core experience feels strong
+
 ## Useful Commands
 
 ### Frontend

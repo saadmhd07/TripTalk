@@ -1,6 +1,9 @@
+from app.core.logging import get_logger, log_error
 from app.models.scenario import Scenario
 from app.models.message import Message
 from app.services.ai_service import AIService
+
+logger = get_logger(__name__)
 
 
 class FeedbackService:
@@ -26,7 +29,13 @@ class FeedbackService:
                 "improvements": [str(item) for item in data.get("improvements", [])][:5],
                 "cultural_tip": str(data.get("cultural_tip", "")) or self._default_cultural_tip(scenario),
             }
-        except Exception:
+        except ValueError as e:
+            log_error(logger, "Feedback generation failed", e, {"scenario_id": scenario.id})
+            logger.info("Using fallback feedback")
+            return self._fallback_feedback(scenario=scenario, messages=messages)
+        except Exception as e:
+            log_error(logger, "Unexpected error in feedback generation", e, {"scenario_id": scenario.id})
+            logger.info("Using fallback feedback")
             return self._fallback_feedback(scenario=scenario, messages=messages)
 
     def _fallback_feedback(self, *, scenario: Scenario, messages: list[Message]) -> dict:

@@ -354,6 +354,29 @@ The product currently supports:
 
 The codebase is no longer just a generated UI mock. The main product loop works end to end.
 
+## Current Product Assessment
+
+The project has now crossed the line from prototype UI to a real navigable MVP.
+
+What is now solid:
+
+- authenticated user flow
+- ownership enforcement on protected conversation resources
+- persisted sessions, messages, and feedback
+- per-language user level model
+- scenario-driven language, mode, and cultural metadata
+- desktop-oriented application shell with first-class sections
+
+What is still weak:
+
+- feedback quality and consistency
+- prompt richness and scenario depth
+- session continuity and recovery behavior
+- profile depth and user preferences
+- content scaling beyond the current seed set
+
+This means the next roadmap should focus less on structural refactors and more on product quality and content quality.
+
 ## Implemented
 
 ### Product Flow
@@ -464,79 +487,179 @@ The codebase is no longer just a generated UI mock. The main product loop works 
 
 ## Known Technical Debt
 
-This is the cleanup block we should address next.
+### Critical (Phase 1)
+- [ ] DEV_MODE hardcoded to True (bypasses auth in production)
+- [ ] Broad exception catching hides real errors (ai_service.py, feedback_service.py)
+- [ ] No logging for errors or OpenAI usage
+- [ ] No rate limiting on OpenAI endpoints (cost risk)
+- [ ] Supabase token fetched on every API call (performance bottleneck)
+- [ ] App.tsx god component (13 state variables, 450+ lines)
+- [ ] python-jose dependency unused (should remove)
 
-- [x] Remove `__pycache__` and generated Python artifacts from the repo
-- [x] Add `.gitignore` for Python, Vite, env files, build outputs, egg-info, caches
-- [x] Remove leftover generated build artifacts from versioned source control if present
-- [x] Centralize frontend types for API payloads and responses
-- [x] Centralize repeated frontend constants and country/scenario presentation mapping
-- [x] Introduce clearer API service modules instead of scattered fetch logic
-- [ ] Improve backend error handling and logging
-- [ ] Replace broad exception handling around AI calls with more explicit handling
-- [ ] Tighten typing around backend service and repository boundaries
-- [x] Decide whether to keep or remove placeholder service files that are still mostly empty
-- [x] Add backend tests beyond the healthcheck
-- [ ] Add frontend smoke tests later if worth it
+### High Priority (Phase 1-2)
+- [ ] Error messages hardcoded in French (no i18n)
+- [ ] No API response caching (countries, scenarios)
+- [ ] No request timeouts on OpenAI calls
+- [ ] JSON serialization anti-pattern in feedback storage
+- [ ] Missing database constraints (enums for mode/role/difficulty)
+- [ ] No pagination on conversation history
+- [ ] Frontend has zero tests
+
+### Medium Priority (Phase 3)
+- [ ] No monitoring/observability (Sentry)
+- [ ] No CI/CD pipeline
+- [ ] Missing database indexes on frequently queried columns
+- [ ] No request validation (max message length, input sanitization)
+- [ ] No cascade delete on ConversationSession → Message
 
 ## Product Gaps
 
-These are not blockers for local development, but they matter before launch.
+### Phase 1 (Portfolio Quality)
+- [ ] Conversation prompts lack cultural authenticity (generic Spanish vs Chilean)
+- [ ] Feedback too generic (needs specific examples, vocabulary suggestions)
+- [ ] Only 2 countries (need Spain, Mexico, UK for variety)
+- [ ] Loading states missing (conversation start, message send)
+- [ ] Error messages not user-friendly
+- [ ] Mobile responsive but not polished
 
-- [x] Refine the country-first entry flow into a clearer country and scenario selection model
-- [ ] Proper user profile onboarding if still needed after login
-- [x] Real user-specific history screen
-- [x] Free conversation mode in addition to guided scenarios
-- [ ] Better feedback quality and consistency
-- [ ] Prompt refinement by level, country, scenario, and language-specific cultural context
-- [ ] Better UX around loading, retry, and empty states
-- [ ] Session recovery if the browser reloads mid-conversation
-- [ ] Better conversation controls than the current simple text chat
-- [x] Shared desktop app shell with persistent top navigation
-- [x] Real `Explorer` page instead of a linear fullscreen flow
-- [x] Real `Profil` page
-- [ ] Voice and avatar interaction path for the longer-term product direction
+### Phase 2 (User Testing)
+- [ ] No session recovery (page reload loses context)
+- [ ] No conversation editing (typo corrections)
+- [ ] Profile lacks depth (no learning goals, preferences)
+- [ ] Navigation between screens could be smoother
 
-## Suggested Roadmap
+### Phase 3 (Production)
+- [ ] No onboarding flow for new users
+- [ ] No user analytics (conversation completion rate, time spent)
+- [ ] No progression tracking (skill improvement over time)
+- [ ] No content recommendation (next scenario suggestions)
 
-### Phase 1: Technical Cleanup
+### Future Vision (Post-PMF)
+- [ ] Voice interaction
+- [ ] Animated avatars
+- [ ] Advanced personalization
+- [ ] Community features (share conversations, leaderboards)
 
-- [x] Add `.gitignore`
-- [x] remove tracked generated files and caches
-- [x] clean backend placeholders
-- [x] reorganize frontend API access
-- [ ] improve naming consistency and comments
-- [x] add a short developer setup guide
+## Project Goals
 
-### Phase 2: Core Product Hardening
+TripTalk has **multiple potential paths**:
 
-- [ ] remove or restrict `DEV_MODE`
-- [x] ensure all session and message ownership is tied to authenticated users
-- [x] add `/me` and profile completion flow
-- [x] define profile vs session model around native language, per-language level, and conversation preferences
-- [ ] add user conversation history screen
-- [ ] improve feedback structure and prompt contracts
+1. **Portfolio Project** - Showcase full-stack skills, architecture quality, product thinking
+2. **Personal Tool** - Solve the founder's real problem (preparing for travel/exchange)
+3. **LinkedIn Visibility** - Build in public, share learnings, attract opportunities
+4. **Commercial Product** - If traction validates, monetize via freemium model
 
-### Phase 3: Launch Preparation
+**Strategy:** Progressive validation through phases. Each phase delivers value independently while keeping options open for the next.
 
-- [ ] sharpen product positioning around cultural immersion and travel use cases
-- [ ] create GitHub repository
-- [ ] define environment variable checklist
-- [ ] deploy backend
-- [ ] deploy frontend
-- [ ] choose production Postgres strategy
-- [ ] set production CORS and callback URLs
-- [ ] test full auth flow in production
+---
 
-## Recommended Immediate Next Steps
+## Success Metrics by Phase
 
-This is the order I recommend now:
+### Phase 1 Success
+- [ ] App used personally 3-4x/week for 2+ weeks
+- [ ] Code quality portfolio-ready (clean, documented, tested)
+- [ ] 10 friends test and give positive feedback
+- [ ] Demo video gets >100 views on LinkedIn
 
-1. Build a desktop app shell with top navigation
-2. Turn the current selection flow into a real `Explorer` page
-3. Add a `Profil` page
-4. Improve backend logging and error handling
-5. Improve feedback structure and prompt contracts
+### Phase 2 Success  
+- [ ] >50 people request access after LinkedIn post
+- [ ] >30% of testers return for 2nd conversation
+- [ ] Qualitative feedback: "I would pay for this" (not just "cool")
+
+### Phase 3 Success
+- [ ] 100+ active users within 3 months
+- [ ] 10%+ free-to-paid conversion
+- [ ] €500+/month revenue
+- [ ] <5% churn rate
+
+## Roadmap
+
+### Phase 1: Solidify MVP (6 weeks)
+
+**Goal:** Portfolio-ready product with great UX
+
+#### Week 1-2: Critical Tech Fixes
+- [ ] Fix DEV_MODE to respect APP_ENV (security critical)
+- [ ] Add proper logging (errors, API calls, OpenAI usage)
+- [ ] Fix exception handling (specific catches, no silent failures)
+- [ ] Add rate limiting on OpenAI endpoints
+- [ ] Remove unused dependency (python-jose)
+
+#### Week 3-4: Product Quality
+- [ ] Improve conversation prompts (authentic Chilean voice, local vocabulary)
+- [ ] Improve feedback generation (specific, actionable, cultural)
+- [ ] Add 2-3 countries (Spain, Mexico, UK/USA)
+- [ ] Create quality scenarios for each country (5-6 per country)
+- [ ] UX/UI polish (loading states, error messages, animations)
+
+#### Week 5-6: Performance & Portfolio
+- [ ] Fix Supabase token caching (performance bottleneck)
+- [ ] Refactor App.tsx state management (extract custom hooks)
+- [ ] Perfect mobile responsiveness
+- [ ] Code cleanup for portfolio quality
+- [ ] Create professional README with screenshots
+- [ ] Record demo video (2-3 min)
+
+**Deliverable:** Portfolio-quality web app ready to share
+
+---
+
+### Phase 2: Validate & Share (2 weeks)
+
+**Goal:** Test market interest, get feedback
+
+#### Week 7: Self-Testing
+- [ ] Use app personally (3-4 conversations/week)
+- [ ] Invite 10 close friends/family to test
+- [ ] Collect qualitative feedback
+- [ ] Track basic metrics (conversations created, session duration)
+
+#### Week 8: Public Sharing
+- [ ] Write LinkedIn post with personal story (Chile, Tandem, solution)
+- [ ] Share demo video
+- [ ] Observe reactions and engagement
+- [ ] Decide next steps based on traction
+
+**Decision Point:** Continue to Phase 3 if strong interest (>50 access requests)
+
+---
+
+### Phase 3: Scale & Monetize (8-10 weeks, optional)
+
+**Only if Phase 2 shows traction**
+
+#### Weeks 9-10: PWA Conversion
+- [ ] Add manifest.json (installable on mobile)
+- [ ] Add service worker (offline support)
+- [ ] Add push notifications
+- [ ] Test iOS and Android installation
+
+#### Weeks 11-13: Monetization
+- [ ] Design freemium model (10 convos/month free, unlimited premium)
+- [ ] Integrate Stripe checkout
+- [ ] Add subscription management to profile
+- [ ] Add webhook for payment confirmation
+
+#### Weeks 14-16: Production Hardening
+- [ ] Database migration (JSONB for feedback, enums for roles/modes)
+- [ ] Add request validation (max lengths, input sanitization)
+- [ ] Set up monitoring (Sentry or equivalent)
+- [ ] CI/CD pipeline
+- [ ] Production deployment
+
+**Deliverable:** Revenue-generating product with real users
+
+---
+
+### Not Now
+
+These require validated product-market fit first:
+
+- Native mobile apps (React Native/Flutter)
+- Voice interaction
+- Animated avatars
+- Advanced personalization
+- Content recommendation engine
 
 ## Recent Progress
 
@@ -574,15 +697,30 @@ Recent implementation work completed:
 - `OPENAI_API_KEY`
 - `OPENAI_MODEL`
 
-## Launch Definition
+## Current Status
 
-For this MVP, I would consider the app launchable when:
+**Foundation:** ✅ Solid
+- Auth works (Supabase)
+- Conversations persist (PostgreSQL)
+- AI integration functional (OpenAI)
+- Basic user flows complete
 
-- auth is stable
-- conversations are saved per user
-- feedback is reliable enough
-- history page exists
-- repo is clean and reproducible
-- production deployment is working
+**Quality:** ⚠️ Needs Work
+- Prompts too generic (not culturally authentic)
+- Feedback not actionable enough
+- Performance bottlenecks (token caching)
+- Error handling hides issues
 
-At this point, we are not at launch-ready quality yet, but the technical foundation is now real and solid.
+**Portfolio Readiness:** 60%
+- Code architecture good
+- Needs cleanup (App.tsx refactor, remove tech debt)
+- Needs documentation polish
+- Needs demo video
+
+**Production Readiness:** 40%
+- Security issues (DEV_MODE)
+- No monitoring/logging
+- No rate limiting
+- Performance not optimized
+
+**Next Priority:** Phase 1 - Week 1-2 (Critical Tech Fixes)

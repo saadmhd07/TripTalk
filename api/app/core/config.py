@@ -9,8 +9,12 @@ class Settings(BaseSettings):
     app_debug: bool = True
     api_v1_prefix: str = "/api/v1"
     frontend_url: str = "http://localhost:3000"
-    dev_mode: bool = True
     dev_user_email: str = "dev@triptalk.local"
+
+    @property
+    def dev_mode(self) -> bool:
+        """Dev mode enabled only when app_env is 'development'"""
+        return self.app_env == "development"
 
     database_url: str = "postgresql+psycopg://postgres:postgres@localhost:5432/triptalk"
 
