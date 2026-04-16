@@ -1,8 +1,11 @@
 import json
 
-from openai import OpenAI
+from openai import OpenAI, OpenAIError
 
 from app.core.config import settings
+from app.core.logging import get_logger, log_error, log_openai_call
+
+logger = get_logger(__name__)
 
 
 class AIService:
@@ -11,6 +14,9 @@ class AIService:
     def __init__(self) -> None:
         self.client = OpenAI(api_key=settings.openai_api_key) if settings.openai_api_key else None
         self.model = settings.openai_model
+
+        if self.client is None:
+            logger.warning("OpenAI client not initialized - API key missing")
 
     def generate_conversation_reply(
         self,
@@ -22,6 +28,7 @@ class AIService:
         history: list[dict[str, str]],
     ) -> str:
         if self.client is None:
+            logger.error("Cannot generate reply - OpenAI client not configured")
             return "OpenAI is not configured yet."
 
         base_system_prompt = system_prompt or (
@@ -46,15 +53,25 @@ class AIService:
             *history,
         ]
 
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=messages,
-        )
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages,
+                timeout=30.0,
+            )
 
-        content = response.choices[0].message.content
-        if not content:
-            return "I could not generate a response right now."
-        return content.strip()
+            tokens_used = response.usage.total_tokens if response.usage else None
+            log_openai_call(logger, "conversation_reply", self.model, tokens=tokens_used)
+
+            content = response.choices[0].message.content
+            if not content:
+                logger.warning("Empty response from OpenAI")
+                return "I could not generate a response right now."
+            return content.strip()
+
+        except OpenAIError as e:
+            log_error(logger, "OpenAI conversation reply failed", e, {"scenario": scenario_title})
+            return "I am having trouble responding right now. Please try again."
 
     def generate_feedback(
         self,
@@ -65,32 +82,49 @@ class AIService:
         conversation_transcript: str,
     ) -> dict:
         if self.client is None:
+            logger.error("Cannot generate feedback - OpenAI client not configured")
             raise ValueError("OpenAI is not configured yet.")
 
-        response = self.client.chat.completions.create(
-            model=self.model,
-            messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "You are an expert language coach. "
-                        "Return only valid JSON with keys: "
-                        "global_score, vocabulary_score, fluency_score, strengths, improvements, cultural_tip. "
-                        "Scores must be integers between 0 and 100. strengths and improvements must be arrays of short strings."
-                    ),
-                },
-                {
-                    "role": "user",
-                    "content": (
-                        f"Country: {country_name}\n"
-                        f"Scenario: {scenario_title}\n"
-                        f"Difficulty: {difficulty}\n\n"
-                        f"Transcript:\n{conversation_transcript}"
-                    ),
-                },
-            ],
-        )
-        content = response.choices[0].message.content
-        if not content:
-            raise ValueError("Empty feedback response")
-        return json.loads(content)
+        try:
+            response = self.client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {
+                        "role": "system",
+                        "content": (
+                            "You are an expert language coach. "
+                            "Return only valid JSON with keys: "
+                            "global_score, vocabulary_score, fluency_score, strengths, improvements, cultural_tip. "
+                            "Scores must be integers between 0 and 100. strengths and improvements must be arrays of short strings."
+                        ),
+                    },
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Country: {country_name}\n"
+                            f"Scenario: {scenario_title}\n"
+                            f"Difficulty: {difficulty}\n\n"
+                            f"Transcript:\n{conversation_transcript}"
+                        ),
+                    },
+                ],
+                timeout=30.0,
+            )
+
+            tokens_used = response.usage.total_tokens if response.usage else None
+            log_openai_call(logger, "feedback_generation", self.model, tokens=tokens_used)
+
+            content = response.choices[0].message.content
+            if not content:
+                logger.error("Empty feedback response from OpenAI")
+                raise ValueError("Empty feedback response")
+
+            return json.loads(content)
+
+        except json.JSONDecodeError as e:
+            log_error(logger, "Failed to parse feedback JSON", e)
+            raise ValueError("Invalid feedback format") from e
+
+        except OpenAIError as e:
+            log_error(logger, "OpenAI feedback generation failed", e, {"scenario": scenario_title})
+            raise
