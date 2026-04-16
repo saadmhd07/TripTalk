@@ -279,7 +279,13 @@ export function ConversationScreen({
               <textarea
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
-                placeholder="Écris ta réponse ici..."
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' && !event.shiftKey) {
+                    event.preventDefault();
+                    handleSendMessage(event as any);
+                  }
+                }}
+                placeholder="Écris ta réponse ici... (Enter to send, Shift+Enter for new line)"
                 rows={4}
                 className="w-full resize-none rounded-3xl border border-gray-200 px-5 py-4 text-base text-gray-800 shadow-sm outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
               />
