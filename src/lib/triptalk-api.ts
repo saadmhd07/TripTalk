@@ -1,4 +1,5 @@
 import { apiFetch } from './api';
+import { ErrorMessages, parseApiError, parseNetworkError, formatErrorMessage } from './errors';
 import type {
   ConversationSessionHistoryApiResponse,
   CountryApiItem,
@@ -11,19 +12,37 @@ import type {
 } from './types';
 
 export async function fetchCountries(): Promise<CountryApiItem[]> {
-  const response = await apiFetch('/countries');
-  if (!response.ok) {
-    throw new Error('Failed to load countries');
+  try {
+    const response = await apiFetch('/countries');
+    if (!response.ok) {
+      const error = await parseApiError(response);
+      throw new Error(formatErrorMessage(error));
+    }
+    return response.json();
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('fetch')) {
+      const netError = parseNetworkError();
+      throw new Error(formatErrorMessage(netError));
+    }
+    throw error;
   }
-  return response.json();
 }
 
 export async function fetchCountryScenarios(countryId: number): Promise<ScenarioApiItem[]> {
-  const response = await apiFetch(`/countries/${countryId}/scenarios`);
-  if (!response.ok) {
-    throw new Error('Failed to load scenarios');
+  try {
+    const response = await apiFetch(`/countries/${countryId}/scenarios`);
+    if (!response.ok) {
+      const error = await parseApiError(response);
+      throw new Error(formatErrorMessage(error));
+    }
+    return response.json();
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('fetch')) {
+      const netError = parseNetworkError();
+      throw new Error(formatErrorMessage(netError));
+    }
+    throw error;
   }
-  return response.json();
 }
 
 export async function createConversationSession(
@@ -52,14 +71,23 @@ export async function sendConversationMessage(
   sessionId: string,
   content: string
 ): Promise<MessageApiItem[]> {
-  const response = await apiFetch(`/conversation-sessions/${sessionId}/messages`, {
-    method: 'POST',
-    body: JSON.stringify({ content }),
-  });
-  if (!response.ok) {
-    throw new Error('Failed to send message');
+  try {
+    const response = await apiFetch(`/conversation-sessions/${sessionId}/messages`, {
+      method: 'POST',
+      body: JSON.stringify({ content }),
+    });
+    if (!response.ok) {
+      const error = await parseApiError(response);
+      throw new Error(formatErrorMessage(error));
+    }
+    return response.json();
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('fetch')) {
+      const netError = parseNetworkError();
+      throw new Error(formatErrorMessage(netError));
+    }
+    throw error;
   }
-  return response.json();
 }
 
 export async function fetchSessionFeedback(sessionId: string): Promise<FeedbackApiResponse> {

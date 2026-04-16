@@ -13,6 +13,8 @@ import {
 
 import { fetchSessionFeedback } from '../lib/triptalk-api';
 import type { FeedbackApiResponse } from '../lib/types';
+import { LoadingSpinner } from './LoadingSpinner';
+import { ErrorMessage } from './ErrorMessage';
 
 interface FeedbackScreenProps {
   sessionId: string;
@@ -141,8 +143,12 @@ export function FeedbackScreen({ sessionId, onRetry, onNewScenario, onChangeCoun
             </div>
 
             <div className="space-y-4">
-              {loading && <div className="rounded-2xl bg-white p-5 text-gray-500">Chargement du feedback...</div>}
-              {error && <div className="rounded-2xl bg-white p-5 text-red-500">{error}</div>}
+              {loading && (
+                <div className="flex justify-center py-12">
+                  <LoadingSpinner text="Génération du feedback..." />
+                </div>
+              )}
+              {error && <ErrorMessage message={error} />}
 
               {!loading && !error && feedback?.strengths.map((strength, index) => (
                 <div key={`strength-${index}`} className="rounded-2xl bg-white p-5 shadow-sm">

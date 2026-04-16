@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Globe2, Sparkles, Wand2 } from 'lucide-react';
+import { LoadingSpinner } from './LoadingSpinner';
+import { ErrorMessage } from './ErrorMessage';
 
 import {
   getCountryPresentation,
@@ -137,7 +139,11 @@ export function ExplorerScreen({
         </div>
 
         <div className="space-y-3">
-          {loadingCountries && <p className="text-sm text-gray-500">Chargement des pays...</p>}
+          {loadingCountries && (
+            <div className="flex justify-center py-12">
+              <LoadingSpinner text="Chargement des pays..." />
+            </div>
+          )}
           {!loadingCountries &&
             countries.map((country) => {
               const presentation = getCountryPresentation(country.name, country.code);
@@ -229,7 +235,9 @@ export function ExplorerScreen({
               </p>
             )}
             {selectedCountryId !== null && loadingScenarios && (
-              <p className="rounded-2xl bg-gray-50 p-5 text-gray-500 2xl:col-span-2">Chargement des scénarios...</p>
+              <div className="flex justify-center py-12 2xl:col-span-2">
+                <LoadingSpinner text="Chargement des scénarios..." />
+              </div>
             )}
             {selectedCountryId !== null &&
               !loadingScenarios &&
@@ -340,7 +348,7 @@ export function ExplorerScreen({
                 {isStartingSession ? 'Démarrage...' : 'Démarrer la conversation'}
               </button>
 
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <ErrorMessage message={error} />}
             </div>
           )}
         </section>
