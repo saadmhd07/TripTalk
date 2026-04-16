@@ -2,6 +2,7 @@ import { Clock3, Globe, MessageSquare, RefreshCcw } from 'lucide-react';
 
 import { getCountryPresentation, getLanguageLabel } from '../lib/presentation';
 import type { ConversationSessionHistoryApiResponse } from '../lib/types';
+import { ErrorMessage } from './ErrorMessage';
 
 interface HistoryScreenProps {
   items: ConversationSessionHistoryApiResponse[];
@@ -60,7 +61,7 @@ export function HistoryScreen({
         </div>
 
         {isLoading && <p className="text-gray-500">Chargement de l'historique...</p>}
-        {error && <p className="text-red-500">{error}</p>}
+        {error && <ErrorMessage message={error} />}
         {!isLoading && !error && items.length === 0 && (
           <div className="rounded-3xl bg-white p-10 text-center shadow-sm">
             <p className="text-lg text-gray-700">Aucune conversation enregistrée pour le moment.</p>

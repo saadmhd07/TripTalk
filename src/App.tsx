@@ -16,6 +16,7 @@ import {
   updateMyLanguageLevel,
 } from './lib/triptalk-api';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
+import { clearTokenCache } from './lib/auth-cache';
 import type {
   Country,
   ConversationSessionHistoryApiResponse,
@@ -229,6 +230,7 @@ export default function App() {
     if (!supabase) {
       return;
     }
+    clearTokenCache();
     await supabase.auth.signOut();
     resetFlowState();
   }

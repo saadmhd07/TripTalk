@@ -31,7 +31,7 @@ export function AppShell({
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,_rgba(251,146,60,0.14),_transparent_22%),linear-gradient(180deg,#fff8f2_0%,#f8fafc_100%)]">
       <header className="sticky top-0 z-30 border-b border-white/70 bg-white/80 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-6 px-6 py-4">
+        <div className="mx-auto flex max-w-[1600px] items-center justify-between gap-3 px-3 py-3 sm:gap-6 sm:px-6 sm:py-4">
           <div className="flex items-center gap-6">
             <button
               type="button"
@@ -39,7 +39,7 @@ export function AppShell({
               className="text-left"
             >
               <p className="text-xs uppercase tracking-[0.35em] text-orange-500">TripTalk</p>
-              <p className="text-lg text-gray-900">Cultural Conversation MVP</p>
+              <p className="hidden text-lg text-gray-900 sm:block">Cultural Conversation MVP</p>
             </button>
 
             <nav className="hidden items-center gap-2 rounded-2xl bg-white/80 p-1 shadow-sm lg:flex">
@@ -80,10 +80,11 @@ export function AppShell({
             <button
               type="button"
               onClick={onNewConversation}
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-rose-500 px-4 py-3 text-white shadow-lg transition hover:shadow-xl"
+              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-rose-500 px-3 py-2 text-sm text-white shadow-lg transition hover:shadow-xl sm:px-4 sm:py-3 sm:text-base"
             >
               <Plus className="h-4 w-4" />
-              Nouvelle conversation
+              <span className="hidden sm:inline">Nouvelle conversation</span>
+              <span className="sm:hidden">Nouveau</span>
             </button>
             <div className="hidden rounded-2xl bg-white px-4 py-3 text-right shadow-sm md:block">
               <p className="text-xs uppercase tracking-wide text-gray-400">Connecté</p>
@@ -92,10 +93,11 @@ export function AppShell({
             <button
               type="button"
               onClick={onSignOut}
-              className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-4 py-3 text-gray-600 transition hover:border-gray-300 hover:text-gray-900"
+              className="inline-flex items-center gap-2 rounded-2xl border border-gray-200 bg-white px-3 py-2 text-gray-600 transition hover:border-gray-300 hover:text-gray-900 sm:px-4 sm:py-3"
+              title="Sign out"
             >
               <LogOut className="h-4 w-4" />
-              Déconnexion
+              <span className="hidden sm:inline">Déconnexion</span>
             </button>
           </div>
         </div>

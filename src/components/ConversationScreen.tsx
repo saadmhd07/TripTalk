@@ -8,6 +8,8 @@ import {
   getLanguageLabel,
   getVocabularyHints,
 } from '../lib/presentation';
+import { LoadingSpinner } from './LoadingSpinner';
+import { ErrorMessage } from './ErrorMessage';
 import { fetchConversationMessages, sendConversationMessage } from '../lib/triptalk-api';
 import type { CountryName } from '../lib/types';
 
@@ -88,9 +90,10 @@ export function ConversationScreen({
             );
           }
         }
-      } catch {
+      } catch (err) {
         if (!ignore) {
-          setError("Impossible de charger l'historique.");
+          const message = err instanceof Error ? err.message : 'Failed to load conversation. Please refresh the page.';
+          setError(message);
         }
       } finally {
         if (!ignore) {
@@ -126,8 +129,9 @@ export function ConversationScreen({
         })),
       ]);
       setDraft('');
-    } catch {
-      setError("Impossible d'envoyer le message.");
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to send message. Please try again.';
+      setError(message);
     } finally {
       setIsSending(false);
     }
@@ -180,7 +184,7 @@ export function ConversationScreen({
       </section>
 
       <div className="grid gap-6 xl:grid-cols-[280px_minmax(0,1fr)_320px]">
-        <aside className="space-y-6">
+        <aside className="hidden space-y-6 xl:block">
           <div className="rounded-[2rem] bg-white p-6 shadow-sm">
             <div className={`${visibleAvatar.bgColor} mx-auto mb-5 flex h-32 w-32 items-center justify-center rounded-full text-6xl shadow-xl`}>
               {visibleAvatar.emoji}
@@ -235,7 +239,9 @@ export function ConversationScreen({
 
           <div className="flex-1 space-y-6 overflow-y-auto px-6 py-6">
             {isLoadingHistory && (
-              <p className="text-center text-gray-500">Chargement de la conversation...</p>
+              <div className="flex h-full items-center justify-center">
+                <LoadingSpinner text="Chargement de la conversation..." />
+              </div>
             )}
             {messages.map((message, index) => (
               <div
@@ -256,6 +262,16 @@ export function ConversationScreen({
                 </div>
               </div>
             ))}
+            {isSending && (
+              <div className="flex justify-start">
+                <div className="max-w-[75%] rounded-3xl bg-gray-100 px-5 py-4 shadow-sm">
+                  <p className="mb-2 text-xs uppercase tracking-wide text-gray-500 opacity-70">
+                    {visibleAvatar.name}
+                  </p>
+                  <LoadingSpinner size="sm" />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="border-t border-gray-100 px-6 py-5">
@@ -291,12 +307,12 @@ export function ConversationScreen({
                   </button>
                 </div>
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
             </form>
           </div>
         </section>
 
-        <aside className="space-y-6">
+        <aside className="hidden space-y-6 xl:block">
           <div className="rounded-[2rem] bg-white p-6 shadow-sm">
             <div className="mb-4 flex items-center gap-3">
               <Lightbulb className="h-5 w-5 text-orange-500" />
