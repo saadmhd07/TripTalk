@@ -85,18 +85,29 @@ class AIService:
             logger.error("Cannot generate feedback - OpenAI client not configured")
             raise ValueError("OpenAI is not configured yet.")
 
+        # Load enhanced feedback prompt
+        from pathlib import Path
+        prompts_dir = Path(__file__).parent.parent.parent / "prompts"
+        feedback_prompt_path = prompts_dir / "feedback_generation.txt"
+
+        if feedback_prompt_path.exists():
+            feedback_system_prompt = feedback_prompt_path.read_text(encoding='utf-8')
+        else:
+            # Fallback to basic prompt if file not found
+            feedback_system_prompt = (
+                "You are an expert language coach. "
+                "Return only valid JSON with keys: "
+                "global_score, vocabulary_score, fluency_score, strengths, improvements, cultural_tip. "
+                "Scores must be integers between 0 and 100. strengths and improvements must be arrays of short strings."
+            )
+
         try:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {
                         "role": "system",
-                        "content": (
-                            "You are an expert language coach. "
-                            "Return only valid JSON with keys: "
-                            "global_score, vocabulary_score, fluency_score, strengths, improvements, cultural_tip. "
-                            "Scores must be integers between 0 and 100. strengths and improvements must be arrays of short strings."
-                        ),
+                        "content": feedback_system_prompt,
                     },
                     {
                         "role": "user",
