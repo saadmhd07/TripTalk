@@ -3,9 +3,9 @@ import type { Session } from '@supabase/supabase-js';
 
 import { AuthScreen } from './components/AuthScreen';
 import { HistoryScreen } from './components/HistoryScreen';
-import { ExplorerScreen } from './components/ExplorerScreen';
-import { AppShell } from './components/AppShell';
-import { ConversationScreen } from './components/ConversationScreen';
+import { ExplorerScreenNew as ExplorerScreen } from './components/ExplorerScreenNew';
+import { Sidebar } from './components/Sidebar';
+import { ConversationScreenNew as ConversationScreen } from './components/ConversationScreenNew';
 import { FeedbackScreen } from './components/FeedbackScreen';
 import { ProfileScreen } from './components/ProfileScreen';
 import {
@@ -193,7 +193,7 @@ export default function App() {
     }
   }
 
-  const handleCountrySelect = (country: Exclude<Country, null>, countryId: number) => {
+  const handleCountrySelect = (country: string, countryId: number) => {
     setSelectedCountry(country);
     setSelectedCountryId(countryId);
     setSelectedScenario(null);
@@ -313,14 +313,17 @@ export default function App() {
   }
 
   return (
-    <AppShell
-      activeSection={getActiveSection()}
-      userEmail={profile?.email ?? session?.user.email ?? ''}
-      onGoExplorer={openExplorer}
-      onGoHistory={openHistory}
-      onGoProfile={openProfile}
-      onSignOut={() => void handleSignOut()}
-    >
+    <div className="flex min-h-screen bg-[#FFF8F2]">
+      <Sidebar
+        activeSection={getActiveSection()}
+        userEmail={profile?.email ?? session?.user.email ?? ''}
+        onGoExplorer={openExplorer}
+        onGoConversation={openExplorer}
+        onGoHistory={openHistory}
+        onGoProfile={openProfile}
+        onSignOut={() => void handleSignOut()}
+      />
+      <main className="ml-60 flex-1 p-8">
       {currentScreen === 'profile' && (
         <ProfileScreen
           profile={profile}
@@ -377,6 +380,7 @@ export default function App() {
           onChangeCountry={startNewConversation}
         />
       )}
-    </AppShell>
+      </main>
+    </div>
   );
 }
