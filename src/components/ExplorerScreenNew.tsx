@@ -109,6 +109,7 @@ export function ExplorerScreenNew({
     'ES': 'spain',
     'MX': 'mexico',
     'FR': 'france',
+    'GB': 'uk',
   };
 
   const countryImageExists = (code: string): boolean => {
