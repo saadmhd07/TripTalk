@@ -101,87 +101,100 @@ export function ProfileScreen({ profile, onProfileUpdated }: ProfileScreenProps)
   }
 
   return (
-    <div className="space-y-8">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="mb-2 text-sm uppercase tracking-[0.25em] text-orange-500">Profil</p>
-          <h1 className="text-4xl text-gray-900">Compte et préférences</h1>
-          <p className="mt-2 text-lg text-gray-500">
-            Gère ton identité et tes niveaux par langue.
-          </p>
-        </div>
-      </div>
+    <div className="mx-auto max-w-7xl">
+      {/* Header */}
+      <header className="mb-12">
+        <h1 className="mb-3 text-4xl font-bold text-gray-900">
+          Your <span className="text-orange-500">Profile</span>
+        </h1>
+        <p className="text-lg text-gray-600">
+          Manage your identity and language proficiency levels.
+        </p>
+      </header>
 
-      <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
-        <div className="rounded-[2rem] bg-white p-8 shadow-sm">
+      {/* Content Grid */}
+      <div className="grid gap-6 lg:grid-cols-[1.5fr_1fr]">
+        {/* Identity Card */}
+        <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
           <div className="mb-6 flex items-center gap-3">
-            <UserCircle2 className="h-6 w-6 text-orange-500" />
-            <h2 className="text-2xl text-gray-900">Identité</h2>
+            <div className="rounded-xl bg-orange-100 p-3">
+              <UserCircle2 className="h-6 w-6 text-orange-600" />
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-900">Identity</h2>
           </div>
 
           <form onSubmit={handleProfileSubmit} className="space-y-5">
-            <label className="block">
-              <span className="mb-2 block text-sm text-gray-600">Email</span>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Email</label>
               <input
                 type="email"
                 value={profile?.email ?? ''}
                 disabled
-                className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-500 outline-none"
+                className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-gray-500 outline-none"
               />
-            </label>
+            </div>
 
-            <label className="block">
-              <span className="mb-2 block text-sm text-gray-600">Nom affiché</span>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Display Name</label>
               <input
                 type="text"
                 value={displayName}
                 onChange={(event) => setDisplayName(event.target.value)}
-                className="w-full rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
-                placeholder="Comment veux-tu apparaître dans l'app ?"
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 outline-none transition-colors focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
+                placeholder="How do you want to appear in the app?"
               />
-            </label>
+            </div>
 
-            <label className="block">
-              <span className="mb-2 block text-sm text-gray-600">Langue maternelle</span>
+            <div>
+              <label className="mb-2 block text-sm font-medium text-gray-700">Native Language</label>
               <input
                 type="text"
                 value={nativeLanguage}
                 onChange={(event) => setNativeLanguage(event.target.value)}
-                className="w-full rounded-2xl border border-gray-200 px-4 py-3 outline-none transition focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
-                placeholder="ex. Français"
+                className="w-full rounded-xl border border-gray-200 px-4 py-3 text-gray-900 outline-none transition-colors focus:border-orange-400 focus:ring-2 focus:ring-orange-200"
+                placeholder="e.g. French"
               />
-            </label>
+            </div>
 
             <button
               type="submit"
               disabled={isSavingProfile}
-              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-orange-500 to-rose-500 px-5 py-3 text-white shadow-lg transition hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex items-center gap-2 rounded-xl bg-orange-500 px-6 py-3 font-medium text-white shadow-sm transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <Save className="h-4 w-4" />
-              {isSavingProfile ? 'Enregistrement...' : 'Enregistrer le profil'}
+              {isSavingProfile ? 'Saving...' : 'Save Profile'}
             </button>
           </form>
         </div>
 
-        <div className="rounded-[2rem] bg-white p-8 shadow-sm">
+        {/* Language Levels Card */}
+        <div className="rounded-2xl bg-white p-8 shadow-sm ring-1 ring-gray-200">
           <div className="mb-6 flex items-center gap-3">
-            <Globe2 className="h-6 w-6 text-orange-500" />
-            <h2 className="text-2xl text-gray-900">Niveaux par langue</h2>
+            <div className="rounded-xl bg-blue-100 p-3">
+              <Globe2 className="h-6 w-6 text-blue-600" />
+            </div>
+            <h2 className="text-2xl font-semibold text-gray-900">Language Levels</h2>
           </div>
 
           <div className="space-y-4">
-            {loadingLevels && <p className="text-gray-500">Chargement des niveaux...</p>}
+            {loadingLevels && (
+              <div className="flex items-center justify-center py-8">
+                <p className="text-sm text-gray-500">Loading levels...</p>
+              </div>
+            )}
             {!loadingLevels && levels.length === 0 && (
-              <div className="rounded-2xl bg-orange-50 p-5 text-gray-700">
-                Aucun niveau enregistré pour le moment.
+              <div className="rounded-xl bg-orange-50 p-5 text-center text-sm text-gray-600">
+                No levels saved yet. Start a conversation to set your first level!
               </div>
             )}
             {levels.map((item) => (
-              <div key={item.id} className="rounded-2xl border border-gray-100 p-4">
-                <div className="mb-3 flex items-center justify-between gap-3">
+              <div key={item.id} className="rounded-xl border border-gray-200 bg-gray-50 p-4">
+                <div className="mb-3 flex items-center justify-between">
                   <div>
-                    <p className="text-lg text-gray-900">{getLanguageLabel(item.language_code)}</p>
-                    <p className="text-sm text-gray-500">{item.language_code.toUpperCase()}</p>
+                    <p className="text-base font-semibold text-gray-900">
+                      {getLanguageLabel(item.language_code)}
+                    </p>
+                    <p className="text-xs text-gray-500">{item.language_code.toUpperCase()}</p>
                   </div>
                   <Sparkles className="h-5 w-5 text-orange-400" />
                 </div>
@@ -192,10 +205,10 @@ export function ProfileScreen({ profile, onProfileUpdated }: ProfileScreenProps)
                       type="button"
                       onClick={() => void handleLevelChange(item.language_code, level)}
                       disabled={savingLanguageCode === item.language_code}
-                      className={`rounded-xl px-3 py-2 text-sm transition ${
+                      className={`rounded-lg px-3 py-2 text-xs font-medium transition-colors ${
                         item.level === level
-                          ? 'bg-orange-100 text-orange-700'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          ? 'bg-orange-500 text-white shadow-sm'
+                          : 'bg-white text-gray-700 hover:bg-gray-100'
                       } disabled:cursor-not-allowed disabled:opacity-60`}
                     >
                       {level}
@@ -208,8 +221,21 @@ export function ProfileScreen({ profile, onProfileUpdated }: ProfileScreenProps)
         </div>
       </div>
 
-      {message && <p className="text-sm text-emerald-600">{message}</p>}
-      {error && <p className="text-sm text-red-500">{error}</p>}
+      {/* Feedback Messages */}
+      {(message || error) && (
+        <div className="mt-6">
+          {message && (
+            <div className="rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
+              {message}
+            </div>
+          )}
+          {error && (
+            <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 }
