@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { ArrowRight, Globe2, Sparkles } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 
 import {
   getCountryPresentation,
@@ -121,22 +121,22 @@ export function ExplorerScreenNew({
     return `/images/countries/${filename}.jpg`;
   };
 
+  const levelOptions: Exclude<Level, null>[] = ['Débutant', 'Intermédiaire', 'Avancé'];
+
   return (
     <div className="mx-auto max-w-7xl">
-      {/* Hero Header */}
       <header className="mb-12">
         <h1 className="mb-3 text-4xl font-bold text-gray-900">
           Get ready before you <span className="text-orange-500">arrive</span>
         </h1>
-        <p className="text-lg text-gray-600">
-          Practice realistic local conversations, pick up cultural cues, and build confidence
-          before landing in a new country.
+        <p className="max-w-3xl text-lg text-gray-600">
+          Explore countries, rehearse realistic scenarios, and learn the tone, expressions, and
+          small cultural cues that make a conversation feel local.
         </p>
       </header>
 
-      {/* Recommended Countries */}
       <section className="mb-16">
-        <h2 className="mb-6 text-2xl font-bold text-gray-900">Recommended for you</h2>
+        <h2 className="mb-6 text-2xl font-bold text-gray-900">Destinations</h2>
 
         {loadingCountries && (
           <div className="flex justify-center py-12">
@@ -150,6 +150,7 @@ export function ExplorerScreenNew({
               const presentation = getCountryPresentation(country.name, country.code);
               const isActive = country.id === selectedCountryId;
               const hasImage = countryImageExists(country.code);
+              const isFeatured = country.code === 'CL';
 
               return (
                 <button
@@ -162,7 +163,6 @@ export function ExplorerScreenNew({
                       : 'hover:scale-[1.02] hover:shadow-xl'
                   }`}
                 >
-                  {/* Image or gradient background */}
                   {hasImage ? (
                     <div className="relative h-64">
                       <img
@@ -170,20 +170,18 @@ export function ExplorerScreenNew({
                         alt={country.name}
                         className="h-full w-full object-cover"
                         onError={(e) => {
-                          // Fallback to gradient if image fails
                           const target = e.target as HTMLImageElement;
                           target.style.display = 'none';
                           target.nextElementSibling?.classList.remove('hidden');
                         }}
                       />
-                      <div className={`absolute inset-0 bg-gradient-to-t from-black/60 to-transparent hidden`} />
+                      <div className="absolute inset-0 hidden bg-gradient-to-t from-black/60 to-transparent" />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     </div>
                   ) : (
                     <div className={`h-64 ${presentation.bgColor}`} />
                   )}
 
-                  {/* Content overlay */}
                   <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
                     <div className="mb-2 flex items-center gap-3">
                       <span className="text-4xl">{presentation.flag}</span>
@@ -191,12 +189,19 @@ export function ExplorerScreenNew({
                     </div>
                     <p className="text-sm text-white/90">{presentation.tagline}</p>
 
-                    {isActive && (
-                      <div className="mt-3 inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-orange-600">
-                        <Sparkles className="h-4 w-4" />
-                        Selected
-                      </div>
-                    )}
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {isFeatured && (
+                        <span className="inline-flex items-center gap-2 rounded-lg bg-white px-3 py-1.5 text-sm font-medium text-orange-600">
+                          <Sparkles className="h-4 w-4" />
+                          Featured
+                        </span>
+                      )}
+                      {isActive && (
+                        <span className="inline-flex items-center gap-2 rounded-lg bg-white/20 px-3 py-1.5 text-sm font-medium text-white">
+                          Selected
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </button>
               );
@@ -205,14 +210,13 @@ export function ExplorerScreenNew({
         )}
       </section>
 
-      {/* Scenarios Section - Only shows after country selected */}
       {selectedCountryId !== null && (
         <section className="mb-16">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">
-              Rehearse your first situations in {selectedCountry}
-            </h2>
-            <p className="mt-1 text-gray-600">Choose a moment you want to feel ready for</p>
+            <h2 className="text-2xl font-bold text-gray-900">Scenarios in {selectedCountry}</h2>
+            <p className="mt-1 text-gray-600">
+              Pick a situation you want to feel ready for.
+            </p>
           </div>
 
           {loadingScenarios && (
@@ -228,6 +232,7 @@ export function ExplorerScreenNew({
                 const Icon = presentation.icon;
                 const isActive = selectedScenario?.id === scenario.id;
                 const isWorking = scenarioActionId === scenario.id && isPreparingScenario;
+                const isFeatured = selectedCountry === 'Chile' && scenario.slug === 'aeroport-santiago';
 
                 return (
                   <button
@@ -254,12 +259,15 @@ export function ExplorerScreenNew({
                           <span className="rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-medium text-blue-700">
                             {getLanguageLabel(scenario.language_code)}
                           </span>
+                          {isFeatured && (
+                            <span className="rounded-full bg-orange-50 px-2.5 py-0.5 text-xs font-medium text-orange-700">
+                              Recommended first
+                            </span>
+                          )}
                         </div>
                         <p className="text-sm text-gray-600">{scenario.description}</p>
                         {isWorking && (
-                          <p className="mt-3 text-sm text-gray-500">
-                            Loading session parameters...
-                          </p>
+                          <p className="mt-3 text-sm text-gray-500">Loading session parameters...</p>
                         )}
                       </div>
                     </div>
@@ -269,14 +277,13 @@ export function ExplorerScreenNew({
             </div>
           )}
 
-          {/* Level Selection - Only shows after scenario selected */}
           {selectedScenario && (
             <div className="mt-8 rounded-2xl border-2 border-orange-200 bg-orange-50 p-6">
               <h3 className="mb-4 text-lg font-semibold text-gray-900">
                 Choose your level for this session
               </h3>
               <div className="mb-6 grid grid-cols-3 gap-3">
-                {(['beginner', 'intermediate', 'advanced'] as const).map((level) => (
+                {levelOptions.map((level) => (
                   <button
                     key={level}
                     type="button"
@@ -287,7 +294,7 @@ export function ExplorerScreenNew({
                         : 'bg-white text-gray-700 hover:bg-gray-50'
                     }`}
                   >
-                    {level.charAt(0).toUpperCase() + level.slice(1)}
+                    {level}
                   </button>
                 ))}
               </div>

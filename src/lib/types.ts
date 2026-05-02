@@ -11,8 +11,11 @@ export type Country = CountryName | null;
 
 export interface SelectedScenario {
   id: number;
+  slug: string;
   title: string;
+  description: string;
   language_code: string;
+  difficulty?: string;
   mode: string;
   intro_message?: string | null;
   cultural_tip?: string | null;

@@ -262,7 +262,9 @@ export default function App() {
     setSelectedCountry(item.country_name);
     setSelectedScenario({
       id: item.scenario_id,
+      slug: '',
       title: item.scenario_title,
+      description: '',
       language_code: item.language_code,
       mode: item.mode,
       intro_message: item.intro_message,
@@ -279,7 +281,9 @@ export default function App() {
     setSelectedCountry(item.country_name);
     setSelectedScenario({
       id: item.scenario_id,
+      slug: '',
       title: item.scenario_title,
+      description: '',
       language_code: item.language_code,
       mode: item.mode,
       intro_message: item.intro_message,
@@ -359,7 +363,9 @@ export default function App() {
       {currentScreen === 'conversation' && (
         <ConversationScreen 
           country={selectedCountry!}
+          scenarioSlug={selectedScenario!.slug}
           scenario={selectedScenario!.title}
+          scenarioDescription={selectedScenario?.description}
           sessionId={sessionId!}
           languageCode={selectedScenario?.language_code}
           mode={selectedScenario?.mode}
