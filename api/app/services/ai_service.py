@@ -1,4 +1,7 @@
 import json
+import os
+from pathlib import Path
+from tempfile import NamedTemporaryFile
 
 from openai import OpenAI, OpenAIError
 
@@ -14,6 +17,8 @@ class AIService:
     def __init__(self) -> None:
         self.client = OpenAI(api_key=settings.openai_api_key) if settings.openai_api_key else None
         self.model = settings.openai_model
+        self.tts_model = settings.openai_tts_model
+        self.default_tts_voice = settings.openai_tts_voice_default
 
         if self.client is None:
             logger.warning("OpenAI client not initialized - API key missing")
@@ -86,7 +91,6 @@ class AIService:
             raise ValueError("OpenAI is not configured yet.")
 
         # Load enhanced feedback prompt
-        from pathlib import Path
         prompts_dir = Path(__file__).parent.parent.parent / "prompts"
         feedback_prompt_path = prompts_dir / "feedback_generation.txt"
 
@@ -139,3 +143,74 @@ class AIService:
         except OpenAIError as e:
             log_error(logger, "OpenAI feedback generation failed", e, {"scenario": scenario_title})
             raise
+
+    def synthesize_speech(
+        self,
+        *,
+        text: str,
+        voice: str | None = None,
+        speed: float = 1.0,
+    ) -> bytes:
+        if self.client is None:
+            logger.error("Cannot synthesize speech - OpenAI client not configured")
+            raise ValueError("OpenAI is not configured yet.")
+
+        output_path: Path | None = None
+
+        try:
+            with NamedTemporaryFile(suffix=".mp3", delete=False) as tmp_file:
+                output_path = Path(tmp_file.name)
+
+            with self.client.audio.speech.with_streaming_response.create(
+                model=self.tts_model,
+                voice=voice or self.default_tts_voice,
+                input=text,
+                speed=speed,
+            ) as response:
+                response.stream_to_file(output_path)
+
+            audio_bytes = output_path.read_bytes()
+            log_openai_call(logger, "speech_synthesis", self.tts_model)
+            return audio_bytes
+
+        except OpenAIError as e:
+            log_error(logger, "OpenAI speech synthesis failed", e, {"voice": voice})
+            raise ValueError("Speech synthesis failed") from e
+        finally:
+            if output_path and output_path.exists():
+                os.unlink(output_path)
+
+    def transcribe_audio(
+        self,
+        *,
+        audio_path: Path,
+        language: str | None = None,
+    ) -> str:
+        if self.client is None:
+            logger.error("Cannot transcribe audio - OpenAI client not configured")
+            raise ValueError("OpenAI is not configured yet.")
+
+        try:
+            with audio_path.open("rb") as audio_file:
+                transcription = self.client.audio.transcriptions.create(
+                    model="whisper-1",
+                    file=audio_file,
+                    language=language,
+                    response_format="text",
+                )
+
+            log_openai_call(logger, "speech_transcription", "whisper-1")
+
+            if hasattr(transcription, "text"):
+                text = transcription.text
+            else:
+                text = str(transcription)
+
+            text = text.strip()
+            if not text:
+                raise ValueError("Empty transcription")
+            return text
+
+        except OpenAIError as e:
+            log_error(logger, "OpenAI speech transcription failed", e, {"language": language})
+            raise ValueError("Speech transcription failed") from e
