@@ -1,6 +1,6 @@
 # TripTalk
 
-TripTalk is a language-learning MVP focused on travel scenarios.
+TripTalk is an AI conversation MVP for travel preparation and cultural immersion.
 
 ## Product Vision
 
@@ -53,9 +53,12 @@ The app currently supports:
 │   ├── alembic/
 │   ├── tests/
 │   └── pyproject.toml
+├── docs/
+│   └── archive/          # progress notes and temporary planning docs
 ├── .env.example          # frontend env example
 ├── api/.env.example      # backend env example
-└── ARCHITECTURE_MVP.md   # status + roadmap
+├── PRODUCT_STRATEGY.md   # product framing, ICP, validation plan
+└── ARCHITECTURE_MVP.md   # technical status + roadmap
 ```
 
 ## Requirements
@@ -354,6 +357,20 @@ python3 -m compileall api/app
 
 ## Current State
 
+Documentation is intentionally rationalized:
+
+- [README.md](/home/saad/projects/perso/README.md): setup and project entry point
+- [PRODUCT_STRATEGY.md](/home/saad/projects/perso/PRODUCT_STRATEGY.md): product direction and validation logic
+- [ARCHITECTURE_MVP.md](/home/saad/projects/perso/ARCHITECTURE_MVP.md): technical architecture and engineering roadmap
+- `docs/archive/`: older progress notes, checklists, and temporary planning documents
+
+See [PRODUCT_STRATEGY.md](/home/saad/projects/perso/PRODUCT_STRATEGY.md) for:
+
+- current product thesis
+- ICP and positioning
+- validation bar
+- short-term execution plan
+
 See [ARCHITECTURE_MVP.md](/home/saad/projects/perso/ARCHITECTURE_MVP.md) for:
 
 - implemented work
@@ -363,8 +380,8 @@ See [ARCHITECTURE_MVP.md](/home/saad/projects/perso/ARCHITECTURE_MVP.md) for:
 
 ## Current Priorities
 
-- technical cleanup
-- better developer documentation
-- backend tests beyond healthcheck
-- user conversation history screen
-- prompt and feedback quality improvements
+- strengthen one wedge experience before broadening scope
+- improve prompt quality and cultural feedback quality
+- tighten the conversation flow and UX clarity
+- keep the codebase clean enough for fast iteration
+- run closed user tests once the core experience is coherent

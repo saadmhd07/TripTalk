@@ -6,6 +6,8 @@ from app.repositories.country_repository import CountryRepository
 from app.repositories.scenario_repository import ScenarioRepository
 
 
+PROMPTS_DIR = Path(__file__).parent.parent.parent / "prompts"
+
 DEFAULT_COUNTRIES = [
     {"code": "CL", "name": "Chile", "language": "es", "is_active": True},
     {"code": "US", "name": "USA", "language": "en", "is_active": True},
@@ -124,18 +126,38 @@ class SeedService:
     def __init__(self) -> None:
         self.country_repository = CountryRepository()
         self.scenario_repository = ScenarioRepository()
-        self.prompts_dir = Path(__file__).parent.parent.parent / "prompts"
 
     def _load_prompt(self, filename: str | None, fallback: str) -> str:
         if not filename:
             return fallback
 
-        prompt_path = self.prompts_dir / filename
+        prompt_path = PROMPTS_DIR / filename
         if not prompt_path.exists():
             return fallback
 
         content = prompt_path.read_text(encoding="utf-8").strip()
         return content or fallback
+
+    def _build_scenario_payload(self, scenario: dict[str, str | bool], country_id: int) -> dict:
+        return {
+            "country_id": country_id,
+            "slug": scenario["slug"],
+            "title": scenario["title"],
+            "description": scenario["description"],
+            "language_code": scenario["language_code"],
+            "difficulty": scenario["difficulty"],
+            "mode": scenario["mode"],
+            "intro_message": scenario["intro_message"],
+            "cultural_tip": scenario["cultural_tip"],
+            "vocabulary_hints": scenario["vocabulary_hints"],
+            "partner_name": scenario["partner_name"],
+            "partner_role": scenario["partner_role"],
+            "system_prompt": self._load_prompt(
+                scenario.get("prompt_file"),
+                str(scenario["system_prompt"]),
+            ),
+            "is_active": scenario["is_active"],
+        }
 
     def seed_reference_data(self, db: Session) -> None:
         self.country_repository.create_many_if_missing(db, DEFAULT_COUNTRIES)
@@ -151,27 +173,7 @@ class SeedService:
             country = countries_by_code.get(scenario["country_code"])
             if country is None:
                 continue
-            scenarios_to_create.append(
-                {
-                    "country_id": country.id,
-                    "slug": scenario["slug"],
-                    "title": scenario["title"],
-                    "description": scenario["description"],
-                    "language_code": scenario["language_code"],
-                    "difficulty": scenario["difficulty"],
-                    "mode": scenario["mode"],
-                    "intro_message": scenario["intro_message"],
-                    "cultural_tip": scenario["cultural_tip"],
-                    "vocabulary_hints": scenario["vocabulary_hints"],
-                    "partner_name": scenario["partner_name"],
-                    "partner_role": scenario["partner_role"],
-                    "system_prompt": self._load_prompt(
-                        scenario.get("prompt_file"),
-                        scenario["system_prompt"],
-                    ),
-                    "is_active": scenario["is_active"],
-                }
-            )
+            scenarios_to_create.append(self._build_scenario_payload(scenario, country.id))
 
         self.scenario_repository.upsert_many_by_slug(db, scenarios_to_create)
         db.commit()
