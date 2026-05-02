@@ -21,9 +21,13 @@ class ScenarioRepository:
         return db.scalar(stmt)
 
     def create_many_if_missing(self, db: Session, scenarios: list[dict]) -> None:
+        if not scenarios:
+            return
+
+        slugs = [scenario["slug"] for scenario in scenarios]
         existing_slugs = {
             slug
-            for slug in db.scalars(select(Scenario.slug).where(Scenario.slug.in_([s["slug"] for s in scenarios])))
+            for slug in db.scalars(select(Scenario.slug).where(Scenario.slug.in_(slugs)))
         }
         for scenario in scenarios:
             if scenario["slug"] in existing_slugs:
@@ -34,10 +38,11 @@ class ScenarioRepository:
         if not scenarios:
             return
 
+        slugs = [item["slug"] for item in scenarios]
         existing_by_slug = {
             scenario.slug: scenario
             for scenario in db.scalars(
-                select(Scenario).where(Scenario.slug.in_([item["slug"] for item in scenarios]))
+                select(Scenario).where(Scenario.slug.in_(slugs))
             )
         }
 
