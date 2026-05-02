@@ -30,8 +30,9 @@ def test_seed_service_uses_rich_prompt_files() -> None:
         chile_airport = db.query(Scenario).filter(Scenario.slug == "aeroport-santiago").one()
         usa_coffee = db.query(Scenario).filter(Scenario.slug == "order-coffee").one()
 
-        assert "PERSONALITY & BACKGROUND" in chile_airport.system_prompt
-        assert "CHILEAN SPANISH CHARACTERISTICS" in chile_airport.system_prompt
+        assert "ROLE:" in chile_airport.system_prompt
+        assert "CHILEAN SPANISH STYLE:" in chile_airport.system_prompt
+        assert "Tarjeta Bip!" in chile_airport.system_prompt
         assert "BROOKLYN/NYC CULTURE" in usa_coffee.system_prompt
         assert usa_coffee.partner_name == "Maya"
 
@@ -67,7 +68,7 @@ def test_seed_service_updates_existing_scenarios_on_reseed() -> None:
 
         updated = db.query(Scenario).filter(Scenario.slug == "aeroport-santiago").one()
 
-        assert updated.title == "Aeroport de Santiago"
+        assert updated.title == "Arrivée à l'aéroport de Santiago"
         assert updated.partner_name == "Matías"
         assert updated.partner_role == "Employé de l'aéroport de Santiago"
-        assert "PERSONALITY & BACKGROUND" in updated.system_prompt
+        assert "CHILEAN SPANISH STYLE:" in updated.system_prompt

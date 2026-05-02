@@ -11,6 +11,10 @@ import {
 
 type IconComponent = typeof Plane;
 
+export const FEATURED_COUNTRY_CODE = 'CL';
+export const FEATURED_COUNTRY_NAME = 'Chile';
+export const FEATURED_SCENARIO_SLUG = 'aeroport-santiago';
+
 const countryOverrides: Record<
   string,
   {
@@ -115,6 +119,22 @@ export function getScenarioPresentation(slug: string) {
   );
 }
 
+export function getScenarioFocusCopy(slug: string) {
+  if (slug === FEATURED_SCENARIO_SLUG) {
+    return {
+      eyebrow: 'Flagship arrival simulation',
+      objective: 'Handle your first minutes in Santiago without freezing.',
+      pressure: 'Airport staff, documents, directions, transport, first local cues.',
+    };
+  }
+
+  return {
+    eyebrow: 'Immersive practice',
+    objective: 'Practice a realistic situation before it happens for real.',
+    pressure: 'Stay natural, keep the exchange moving, and notice the local cues.',
+  };
+}
+
 const avatarOverrides: Record<
   string,
   {
@@ -138,15 +158,23 @@ const avatarOverrides: Record<
   },
 };
 
-export function getConversationAvatarPresentation(countryName: string) {
-  return (
-    avatarOverrides[countryName] ?? {
-      name: countryName,
-      emoji: '🧑',
-      bgColor: 'bg-gradient-to-br from-slate-500 to-teal-500',
-      role: 'Partenaire de conversation local',
-    }
-  );
+export function getConversationAvatarPresentation(
+  countryName: string,
+  partnerName?: string,
+  partnerRole?: string
+) {
+  const fallback = avatarOverrides[countryName] ?? {
+    name: countryName,
+    emoji: '🧑',
+    bgColor: 'bg-gradient-to-br from-slate-500 to-teal-500',
+    role: 'Partenaire de conversation local',
+  };
+
+  return {
+    ...fallback,
+    name: partnerName || fallback.name,
+    role: partnerRole || fallback.role,
+  };
 }
 
 export const languageLabelPresentation: Record<string, string> = {
