@@ -126,10 +126,11 @@ export function ExplorerScreenNew({
       {/* Hero Header */}
       <header className="mb-12">
         <h1 className="mb-3 text-4xl font-bold text-gray-900">
-          Where will <span className="text-orange-500">TripTalk</span> take you today?
+          Get ready before you <span className="text-orange-500">arrive</span>
         </h1>
         <p className="text-lg text-gray-600">
-          Select a destination to practice cultural immersion scenarios, local slang, and real-world conversations people.
+          Practice realistic local conversations, pick up cultural cues, and build confidence
+          before landing in a new country.
         </p>
       </header>
 
@@ -209,9 +210,9 @@ export function ExplorerScreenNew({
         <section className="mb-16">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-gray-900">
-              Pick a scenario in {selectedCountry}
+              Rehearse your first situations in {selectedCountry}
             </h2>
-            <p className="mt-1 text-gray-600">Choose a situation to practice</p>
+            <p className="mt-1 text-gray-600">Choose a moment you want to feel ready for</p>
           </div>
 
           {loadingScenarios && (
