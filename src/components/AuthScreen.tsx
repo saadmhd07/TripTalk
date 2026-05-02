@@ -73,10 +73,10 @@ export function AuthScreen({ onAuthenticated }: AuthScreenProps) {
         <div className="grid w-full overflow-hidden rounded-[2rem] bg-white shadow-2xl lg:grid-cols-[1.1fr_0.9fr]">
           <div className="bg-gradient-to-br from-orange-500 via-rose-500 to-pink-500 p-12 text-white">
             <p className="mb-6 text-sm uppercase tracking-[0.35em] text-white/80">TripTalk</p>
-            <h1 className="mb-6 max-w-md text-5xl">Conversations réalistes, suivi personnel.</h1>
+            <h1 className="mb-6 max-w-md text-5xl">Prépare ton arrivée avant d'y être.</h1>
             <p className="max-w-lg text-lg text-white/90">
-              Connecte-toi pour sauvegarder tes sessions, retrouver ton historique et suivre ta
-              progression.
+              Entraine-toi avec des personnages locaux, découvre les codes culturels, et retrouve
+              tes conversations quand tu veux.
             </p>
           </div>
 

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from sqlalchemy.orm import Session
 
 from app.repositories.country_repository import CountryRepository
@@ -23,8 +25,9 @@ DEFAULT_SCENARIOS = [
         "cultural_tip": "Au Chili, le ton peut être direct mais reste chaleureux. Écoute les petits mots locaux comme 'po' ou 'cachai'.",
         "vocabulary_hints": '["pasaporte = passeport", "aduana = douane", "equipaje = bagage"]',
         "partner_name": "Matías",
-        "partner_role": "Local chilien à l'aéroport",
-        "system_prompt": "You are a friendly Chilean local helping a learner at Santiago airport.",
+        "partner_role": "Employé de l'aéroport de Santiago",
+        "prompt_file": "chile_airport.txt",
+        "system_prompt": "You are a friendly Chilean airport employee helping a learner at Santiago airport.",
         "is_active": True,
     },
     {
@@ -38,8 +41,9 @@ DEFAULT_SCENARIOS = [
         "intro_message": "Buena, súbete nomás. ¿Para dónde vas?",
         "cultural_tip": "Dans un taxi ou Uber, les échanges peuvent vite devenir informels. Un ton simple et naturel fonctionne bien.",
         "vocabulary_hints": '["¿Para dónde vas? = où tu vas ?", "al tiro = tout de suite", "la cuenta = l\'addition / le montant"]',
-        "partner_name": "Carlos",
+        "partner_name": "Ricardo",
         "partner_role": "Chauffeur chilien",
+        "prompt_file": "chile_taxi.txt",
         "system_prompt": "You are a Chilean driver having a natural conversation with a learner.",
         "is_active": True,
     },
@@ -51,11 +55,12 @@ DEFAULT_SCENARIOS = [
         "language_code": "es",
         "difficulty": "beginner",
         "mode": "free",
-        "intro_message": "¡Hola! Soy Matías. ¿Qué te gustaría conversar sobre Chile hoy?",
+        "intro_message": "¡Hola! Soy Sofía. ¿Qué te gustaría conversar sobre Chile hoy?",
         "cultural_tip": "Une conversation libre est l'occasion d'entendre du vocabulaire local et de poser des questions sur la vie quotidienne au Chili.",
         "vocabulary_hints": '["bacán = génial", "cachai = tu vois", "pololear = sortir avec quelqu\'un"]',
-        "partner_name": "Matías",
-        "partner_role": "Ami local chilien",
+        "partner_name": "Sofía",
+        "partner_role": "Locale chilienne passionnée par Santiago",
+        "prompt_file": "chile_free.txt",
         "system_prompt": "You are a friendly Chilean local having an open-ended conversation with a learner. Use natural Chilean expressions when helpful.",
         "is_active": True,
     },
@@ -70,8 +75,9 @@ DEFAULT_SCENARIOS = [
         "intro_message": "Good afternoon. What is the purpose of your visit today?",
         "cultural_tip": "Dans un contexte administratif américain, les réponses courtes, claires et directes sont souvent les plus efficaces.",
         "vocabulary_hints": '["purpose of your visit = motif de votre visite", "length of stay = durée du séjour", "customs = douane"]',
-        "partner_name": "Officer Miller",
+        "partner_name": "Officer James Patterson",
         "partner_role": "Agent d'immigration américain",
+        "prompt_file": "usa_immigration.txt",
         "system_prompt": "You are a US immigration officer talking to a language learner entering the country.",
         "is_active": True,
     },
@@ -86,8 +92,9 @@ DEFAULT_SCENARIOS = [
         "intro_message": "Hey! What can I get started for you today?",
         "cultural_tip": "Aux USA, le small talk rapide et un ton positif sont très fréquents dans les commerces du quotidien.",
         "vocabulary_hints": '["for here or to go = sur place ou à emporter", "size = taille", "anything else? = autre chose ?"]',
-        "partner_name": "Emily",
+        "partner_name": "Maya",
         "partner_role": "Barista américaine",
+        "prompt_file": "usa_coffee.txt",
         "system_prompt": "You are a barista in the US having a friendly exchange with a learner.",
         "is_active": True,
     },
@@ -99,11 +106,12 @@ DEFAULT_SCENARIOS = [
         "language_code": "en",
         "difficulty": "beginner",
         "mode": "free",
-        "intro_message": "Hey! I'm Emily. Want to chat about life in the US?",
+        "intro_message": "Hey! I'm Alex. Want to chat about life in the US?",
         "cultural_tip": "Une conversation libre américaine semblera souvent positive, énergique et orientée vers l'échange rapide.",
         "vocabulary_hints": '["awesome = génial", "for sure = bien sûr", "no worries = pas de souci"]',
-        "partner_name": "Emily",
-        "partner_role": "Locale américaine",
+        "partner_name": "Alex",
+        "partner_role": "Local américain basé à San Francisco",
+        "prompt_file": "usa_free.txt",
         "system_prompt": "You are a friendly American local having an open-ended conversation with a learner.",
         "is_active": True,
     },
@@ -116,6 +124,18 @@ class SeedService:
     def __init__(self) -> None:
         self.country_repository = CountryRepository()
         self.scenario_repository = ScenarioRepository()
+        self.prompts_dir = Path(__file__).parent.parent.parent / "prompts"
+
+    def _load_prompt(self, filename: str | None, fallback: str) -> str:
+        if not filename:
+            return fallback
+
+        prompt_path = self.prompts_dir / filename
+        if not prompt_path.exists():
+            return fallback
+
+        content = prompt_path.read_text(encoding="utf-8").strip()
+        return content or fallback
 
     def seed_reference_data(self, db: Session) -> None:
         self.country_repository.create_many_if_missing(db, DEFAULT_COUNTRIES)
@@ -145,10 +165,13 @@ class SeedService:
                     "vocabulary_hints": scenario["vocabulary_hints"],
                     "partner_name": scenario["partner_name"],
                     "partner_role": scenario["partner_role"],
-                    "system_prompt": scenario["system_prompt"],
+                    "system_prompt": self._load_prompt(
+                        scenario.get("prompt_file"),
+                        scenario["system_prompt"],
+                    ),
                     "is_active": scenario["is_active"],
                 }
             )
 
-        self.scenario_repository.create_many_if_missing(db, scenarios_to_create)
+        self.scenario_repository.upsert_many_by_slug(db, scenarios_to_create)
         db.commit()

@@ -29,3 +29,23 @@ class ScenarioRepository:
             if scenario["slug"] in existing_slugs:
                 continue
             db.add(Scenario(**scenario))
+
+    def upsert_many_by_slug(self, db: Session, scenarios: list[dict]) -> None:
+        if not scenarios:
+            return
+
+        existing_by_slug = {
+            scenario.slug: scenario
+            for scenario in db.scalars(
+                select(Scenario).where(Scenario.slug.in_([item["slug"] for item in scenarios]))
+            )
+        }
+
+        for payload in scenarios:
+            existing = existing_by_slug.get(payload["slug"])
+            if existing is None:
+                db.add(Scenario(**payload))
+                continue
+
+            for field, value in payload.items():
+                setattr(existing, field, value)
