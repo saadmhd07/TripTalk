@@ -90,6 +90,42 @@ export async function sendConversationMessage(
   }
 }
 
+export async function fetchConversationSpeech(
+  sessionId: string,
+  text: string
+): Promise<Blob> {
+  const response = await apiFetch(`/conversation-sessions/${sessionId}/speech`, {
+    method: 'POST',
+    body: JSON.stringify({ text }),
+  });
+  if (!response.ok) {
+    throw new Error('Failed to synthesize speech');
+  }
+  return response.blob();
+}
+
+export async function transcribeConversationAudio(
+  sessionId: string,
+  audioBlob: Blob,
+  language?: string
+): Promise<string> {
+  const formData = new FormData();
+  formData.append('audio', audioBlob, 'recording.webm');
+  if (language) {
+    formData.append('language', language);
+  }
+
+  const response = await apiFetch(`/conversation-sessions/${sessionId}/transcription`, {
+    method: 'POST',
+    body: formData,
+  });
+  if (!response.ok) {
+    throw new Error('Failed to transcribe audio');
+  }
+  const data = await response.json();
+  return data.text as string;
+}
+
 export async function fetchSessionFeedback(sessionId: string): Promise<FeedbackApiResponse> {
   const response = await apiFetch(`/conversation-sessions/${sessionId}/feedback`);
   if (!response.ok) {

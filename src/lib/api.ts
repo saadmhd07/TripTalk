@@ -5,8 +5,9 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000
 
 export async function apiFetch(path: string, init: RequestInit = {}) {
   const headers = new Headers(init.headers);
+  const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData;
 
-  if (init.body && !headers.has('Content-Type')) {
+  if (init.body && !isFormData && !headers.has('Content-Type')) {
     headers.set('Content-Type', 'application/json');
   }
 
