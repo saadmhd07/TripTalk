@@ -140,29 +140,18 @@ const avatarOverrides: Record<
   {
     name: string;
     emoji: string;
+    avatarId?: string;
     imageUrl?: string;
     bgColor: string;
     role: string;
-    mouth?: {
-      xPercent: number;
-      yPercent: number;
-      widthPercent: number;
-      heightPercent: number;
-    };
   }
 > = {
   Chile: {
     name: 'Matías',
     emoji: '👨🏻',
-    imageUrl: '/images/characters/matias-v2.png',
+    avatarId: 'matias',
     bgColor: 'bg-gradient-to-br from-red-400 to-blue-500',
     role: 'Guide local chilien',
-    mouth: {
-      xPercent: 50,
-      yPercent: 67.5,
-      widthPercent: 18,
-      heightPercent: 7.5,
-    },
   },
   USA: {
     name: 'Emily',
