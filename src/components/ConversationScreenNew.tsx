@@ -21,6 +21,7 @@ import {
   transcribeConversationAudio,
 } from '../lib/triptalk-api';
 import type { MessageApiItem } from '../lib/types';
+import { CharacterAvatar } from './CharacterAvatar';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
 
@@ -49,8 +50,6 @@ function AnimatedAvatar({
 }: AnimatedAvatarProps) {
   const isSpeaking = characterState === 'speaking';
   const isListening = recorderState === 'recording';
-  const isProcessing = characterState === 'thinking' || recorderState === 'transcribing';
-  const mouth = visibleAvatar.mouth;
 
   return (
     <div className={`mx-auto w-fit rounded-full p-4 transition-all duration-300 ${avatarGlowClass}`}>
@@ -73,35 +72,14 @@ function AnimatedAvatar({
               alt={visibleAvatar.name}
               className="h-full w-full object-cover object-center scale-[1.16] translate-y-3"
             />
-            {mouth && (
-              <div
-                className="pointer-events-none absolute"
-                style={{
-                  left: `${mouth.xPercent}%`,
-                  top: `${mouth.yPercent}%`,
-                  width: `${mouth.widthPercent}%`,
-                  height: `${mouth.heightPercent}%`,
-                  transform: 'translate(-50%, -50%)',
-                }}
-              >
-                <div
-                  className={[
-                    'avatar-mouth-shell',
-                    isSpeaking
-                      ? 'avatar-mouth-speaking'
-                      : isListening
-                      ? 'avatar-mouth-listening'
-                      : isProcessing
-                      ? 'avatar-mouth-processing'
-                      : 'avatar-mouth-idle',
-                  ].join(' ')}
-                >
-                  <div className="avatar-mouth-core" />
-                  <div className="avatar-mouth-shine" />
-                </div>
-              </div>
-            )}
           </>
+        ) : visibleAvatar.avatarId ? (
+          <CharacterAvatar
+            avatarId={visibleAvatar.avatarId}
+            name={visibleAvatar.name}
+            characterState={characterState}
+            recorderState={recorderState}
+          />
         ) : (
           <span className="text-7xl sm:text-8xl">{visibleAvatar.emoji}</span>
         )}
