@@ -140,6 +140,7 @@ const avatarOverrides: Record<
   {
     name: string;
     emoji: string;
+    avatarId?: string;
     imageUrl?: string;
     bgColor: string;
     role: string;
@@ -148,7 +149,7 @@ const avatarOverrides: Record<
   Chile: {
     name: 'Matías',
     emoji: '👨🏻',
-    imageUrl: '/images/characters/matias.png',
+    avatarId: 'matias',
     bgColor: 'bg-gradient-to-br from-red-400 to-blue-500',
     role: 'Guide local chilien',
   },
