@@ -21,6 +21,7 @@ import {
   transcribeConversationAudio,
 } from '../lib/triptalk-api';
 import type { MessageApiItem } from '../lib/types';
+import { CharacterAvatar } from './CharacterAvatar';
 import { ErrorMessage } from './ErrorMessage';
 import { LoadingSpinner } from './LoadingSpinner';
 
@@ -31,6 +32,61 @@ interface Message {
 
 type CharacterState = 'idle' | 'thinking' | 'speaking';
 type RecorderState = 'idle' | 'recording' | 'transcribing';
+
+interface AnimatedAvatarProps {
+  visibleAvatar: ReturnType<typeof getConversationAvatarPresentation>;
+  avatarGlowClass: string;
+  portraitMotionClass: string;
+  characterState: CharacterState;
+  recorderState: RecorderState;
+}
+
+function AnimatedAvatar({
+  visibleAvatar,
+  avatarGlowClass,
+  portraitMotionClass,
+  characterState,
+  recorderState,
+}: AnimatedAvatarProps) {
+  const isSpeaking = characterState === 'speaking';
+  const isListening = recorderState === 'recording';
+
+  return (
+    <div className={`mx-auto w-fit rounded-full p-4 transition-all duration-300 ${avatarGlowClass}`}>
+      <div
+        className={`relative flex h-56 w-56 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-gradient-to-b from-white/18 to-white/5 transition-all duration-300 sm:h-72 sm:w-72 ${portraitMotionClass}`}
+      >
+        {visibleAvatar.imageUrl ? (
+          <>
+            <div
+              className={`absolute inset-0 rounded-full ${
+                isSpeaking
+                  ? 'bg-[radial-gradient(circle_at_50%_25%,rgba(255,255,255,0.18),transparent_45%)]'
+                  : isListening
+                  ? 'bg-[radial-gradient(circle_at_50%_25%,rgba(125,211,252,0.12),transparent_45%)]'
+                  : 'bg-transparent'
+              }`}
+            />
+            <img
+              src={visibleAvatar.imageUrl}
+              alt={visibleAvatar.name}
+              className="h-full w-full object-cover object-center scale-[1.16] translate-y-3"
+            />
+          </>
+        ) : visibleAvatar.avatarId ? (
+          <CharacterAvatar
+            avatarId={visibleAvatar.avatarId}
+            name={visibleAvatar.name}
+            characterState={characterState}
+            recorderState={recorderState}
+          />
+        ) : (
+          <span className="text-7xl sm:text-8xl">{visibleAvatar.emoji}</span>
+        )}
+      </div>
+    </div>
+  );
+}
 
 interface ConversationScreenNewProps {
   country: string;
@@ -378,21 +434,13 @@ export function ConversationScreenNew({
               <div className="relative w-full max-w-xl">
                 <div className="absolute inset-x-16 top-14 h-56 rounded-full bg-cyan-300/10 blur-3xl" />
                 <div className="relative mx-auto rounded-[2rem] border border-white/10 bg-white/8 px-8 pb-7 pt-10 backdrop-blur">
-                  <div className={`mx-auto w-fit rounded-full p-4 transition-all duration-300 ${avatarGlowClass}`}>
-                    <div
-                      className={`flex h-56 w-56 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-gradient-to-b from-white/18 to-white/5 transition-all duration-300 sm:h-72 sm:w-72 ${portraitMotionClass}`}
-                    >
-                      {visibleAvatar.imageUrl ? (
-                        <img
-                          src={visibleAvatar.imageUrl}
-                          alt={visibleAvatar.name}
-                          className="h-full w-full object-cover object-center scale-[1.18] translate-y-2"
-                        />
-                      ) : (
-                        <span className="text-7xl sm:text-8xl">{visibleAvatar.emoji}</span>
-                      )}
-                    </div>
-                  </div>
+                  <AnimatedAvatar
+                    visibleAvatar={visibleAvatar}
+                    avatarGlowClass={avatarGlowClass}
+                    portraitMotionClass={portraitMotionClass}
+                    characterState={characterState}
+                    recorderState={recorderState}
+                  />
 
                   <div className="mx-auto mt-6 max-w-md text-center">
                     <div className="inline-flex items-center gap-2 rounded-full bg-slate-950/55 px-4 py-1.5 text-xs font-medium text-white ring-1 ring-white/10 backdrop-blur">
