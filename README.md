@@ -72,10 +72,16 @@ The app currently supports:
 
 ## Frontend Setup
 
+Important: all commands below assume the project root is:
+
+```bash
+/home/saad/projects/perso/TalkTrip
+```
+
 Install dependencies:
 
 ```bash
-cd /home/saad/projects/perso
+cd /home/saad/projects/perso/TalkTrip
 npm install
 ```
 
@@ -96,7 +102,7 @@ VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
 Run the frontend:
 
 ```bash
-cd /home/saad/projects/perso
+cd /home/saad/projects/perso/TalkTrip
 npm run dev
 ```
 
@@ -111,7 +117,7 @@ http://localhost:3000
 Create the Python environment:
 
 ```bash
-cd /home/saad/projects/perso
+cd /home/saad/projects/perso/TalkTrip
 UV_CACHE_DIR=/tmp/uv-cache uv venv api/.venv
 cd api
 source .venv/bin/activate
@@ -121,7 +127,7 @@ UV_CACHE_DIR=/tmp/uv-cache uv pip install -e .[dev]
 Create the backend env file:
 
 ```bash
-cd /home/saad/projects/perso/api
+cd /home/saad/projects/perso/TalkTrip/api
 cp .env.example .env
 ```
 
@@ -148,7 +154,7 @@ OPENAI_MODEL=gpt-4.1-mini
 Run the backend:
 
 ```bash
-cd /home/saad/projects/perso/api
+cd /home/saad/projects/perso/TalkTrip/api
 source .venv/bin/activate
 uvicorn app.main:app --reload
 ```
@@ -188,7 +194,7 @@ docker start triptalk-postgres
 Apply migrations:
 
 ```bash
-cd /home/saad/projects/perso/api
+cd /home/saad/projects/perso/TalkTrip/api
 source .venv/bin/activate
 alembic upgrade head
 ```
@@ -236,7 +242,7 @@ docker start triptalk-postgres
 Backend:
 
 ```bash
-cd /home/saad/projects/perso/api
+cd /home/saad/projects/perso/TalkTrip/api
 source .venv/bin/activate
 uvicorn app.main:app --reload
 ```
@@ -246,7 +252,7 @@ uvicorn app.main:app --reload
 Frontend:
 
 ```bash
-cd /home/saad/projects/perso
+cd /home/saad/projects/perso/TalkTrip
 npm run dev
 ```
 
@@ -254,6 +260,52 @@ Then open:
 
 ```text
 http://localhost:3000
+```
+
+## Quick Start
+
+If you just want to run the app locally, use these exact commands.
+
+### 1. Postgres
+
+```bash
+docker start triptalk-postgres
+```
+
+If it does not exist yet:
+
+```bash
+docker run --name triptalk-postgres \
+  -e POSTGRES_USER=postgres \
+  -e POSTGRES_PASSWORD=postgres \
+  -e POSTGRES_DB=triptalk \
+  -p 5432:5432 \
+  -d postgres:16
+```
+
+### 2. Backend
+
+```bash
+cd /home/saad/projects/perso/TalkTrip/api
+
+if [ ! -d .venv ]; then
+  UV_CACHE_DIR=/tmp/uv-cache uv venv .venv
+fi
+
+source .venv/bin/activate
+UV_CACHE_DIR=/tmp/uv-cache uv pip install -e .[dev]
+cp -n .env.example .env
+alembic upgrade head
+seed-reference-data
+uvicorn app.main:app --reload
+```
+
+### 3. Frontend
+
+```bash
+cd /home/saad/projects/perso/TalkTrip
+npm install
+npm run dev
 ```
 
 ## Main Product Flow
