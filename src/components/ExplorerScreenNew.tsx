@@ -40,50 +40,74 @@ export function ExplorerScreenNew({
 }: ExplorerScreenProps) {
   const [countries, setCountries] = useState<CountryApiItem[]>([]);
   const [loadingCountries, setLoadingCountries] = useState(true);
+  const [countriesError, setCountriesError] = useState<string | null>(null);
   const [scenarios, setScenarios] = useState<ScenarioApiItem[]>([]);
   const [loadingScenarios, setLoadingScenarios] = useState(false);
+  const [scenariosError, setScenariosError] = useState<string | null>(null);
   const [scenarioActionId, setScenarioActionId] = useState<number | null>(null);
+  const [countryReloadKey, setCountryReloadKey] = useState(0);
+  const [scenarioReloadKey, setScenarioReloadKey] = useState(0);
 
   useEffect(() => {
     let ignore = false;
     async function load() {
+      setLoadingCountries(true);
+      setCountriesError(null);
       try {
         const data = await fetchCountries();
         if (!ignore) {
           setCountries(data);
-          setLoadingCountries(false);
         }
-      } catch {
+      } catch (caughtError) {
+        if (!ignore) {
+          const message =
+            caughtError instanceof Error
+              ? caughtError.message
+              : 'Unable to load destinations right now.';
+          setCountries([]);
+          setCountriesError(message);
+        }
+      } finally {
         if (!ignore) {
           setLoadingCountries(false);
         }
       }
     }
 
-    if (countries.length === 0) {
-      void load();
-    }
+    void load();
 
     return () => {
       ignore = true;
     };
-  }, []); // Load only once on mount
+  }, [countryReloadKey]);
 
   useEffect(() => {
     let ignore = false;
     async function load() {
       if (selectedCountryId === null) {
+        setScenarios([]);
+        setScenariosError(null);
+        setLoadingScenarios(false);
         return;
       }
 
       setLoadingScenarios(true);
+      setScenariosError(null);
       try {
         const data = await fetchCountryScenarios(selectedCountryId);
         if (!ignore) {
           setScenarios(data);
-          setLoadingScenarios(false);
         }
-      } catch {
+      } catch (caughtError) {
+        if (!ignore) {
+          const message =
+            caughtError instanceof Error
+              ? caughtError.message
+              : 'Unable to load scenarios right now.';
+          setScenarios([]);
+          setScenariosError(message);
+        }
+      } finally {
         if (!ignore) {
           setLoadingScenarios(false);
         }
@@ -95,7 +119,7 @@ export function ExplorerScreenNew({
     return () => {
       ignore = true;
     };
-  }, [selectedCountryId]);
+  }, [selectedCountryId, scenarioReloadKey]);
 
   async function handleScenarioPick(scenario: ScenarioApiItem) {
     setScenarioActionId(scenario.id);
@@ -144,7 +168,14 @@ export function ExplorerScreenNew({
           </div>
         )}
 
-        {!loadingCountries && (
+        {countriesError && !loadingCountries && (
+          <ErrorMessage
+            message={countriesError}
+            onRetry={() => setCountryReloadKey((current) => current + 1)}
+          />
+        )}
+
+        {!loadingCountries && !countriesError && (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {countries.map((country) => {
               const presentation = getCountryPresentation(country.name, country.code);
@@ -225,7 +256,16 @@ export function ExplorerScreenNew({
             </div>
           )}
 
-          {!loadingScenarios && (
+          {scenariosError && !loadingScenarios && (
+            <div className="mb-6">
+              <ErrorMessage
+                message={scenariosError}
+                onRetry={() => setScenarioReloadKey((current) => current + 1)}
+              />
+            </div>
+          )}
+
+          {!loadingScenarios && !scenariosError && (
             <div className="grid gap-6 md:grid-cols-2">
               {scenarios.map((scenario) => {
                 const presentation = getScenarioPresentation(scenario.slug);

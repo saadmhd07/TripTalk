@@ -1,10 +1,11 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  Compass,
+  ArrowLeft,
   MessageSquareText,
   Mic,
   Play,
   Send,
+  Sparkles,
   Square,
   Volume2,
 } from 'lucide-react';
@@ -101,6 +102,8 @@ interface ConversationScreenNewProps {
   vocabularyHints?: string[] | null;
   partnerName?: string | null;
   partnerRole?: string | null;
+  actionError?: string | null;
+  isCompletingSession?: boolean;
   onBackToExplorer: () => void;
   onFeedback: () => void;
 }
@@ -118,6 +121,9 @@ export function ConversationScreenNew({
   vocabularyHints,
   partnerName,
   partnerRole,
+  actionError,
+  isCompletingSession = false,
+  onBackToExplorer,
   onFeedback,
 }: ConversationScreenNewProps) {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -346,18 +352,18 @@ export function ConversationScreenNew({
 
   const avatarGlowClass =
     characterState === 'speaking'
-      ? 'shadow-[0_0_80px_rgba(249,115,22,0.38)] ring-8 ring-orange-200/70'
+      ? 'shadow-[0_0_90px_rgba(249,115,22,0.36)] ring-8 ring-orange-200/80'
       : recorderState === 'recording'
-      ? 'shadow-[0_0_70px_rgba(14,165,233,0.35)] ring-8 ring-sky-200/80'
+      ? 'shadow-[0_0_90px_rgba(245,158,11,0.34)] ring-8 ring-amber-200/85'
       : characterState === 'thinking'
-      ? 'shadow-[0_0_60px_rgba(56,189,248,0.24)] ring-8 ring-sky-100'
-      : 'shadow-[0_20px_60px_rgba(15,23,42,0.18)] ring-8 ring-white/80';
+      ? 'shadow-[0_0_70px_rgba(251,191,36,0.22)] ring-8 ring-orange-100'
+      : 'shadow-[0_24px_70px_rgba(120,53,15,0.16)] ring-8 ring-white/90';
 
   const statusLabel =
     characterState === 'speaking'
-      ? 'Matías is speaking'
+      ? `${visibleAvatar.name} is speaking`
       : recorderState === 'recording'
-      ? 'Listening to you'
+      ? 'Listening to your answer'
       : recorderState === 'transcribing'
       ? 'Turning your voice into text'
       : characterState === 'thinking'
@@ -383,37 +389,53 @@ export function ConversationScreenNew({
       : 'translate-y-0 scale-100';
 
   return (
-    <div className="mx-auto h-[calc(100vh-4rem)] max-w-7xl">
-      <div className="grid h-full gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <section className="relative overflow-hidden rounded-[2.25rem] bg-gradient-to-br from-[#06172B] via-[#0A2A48] to-[#123E64] p-6 text-white shadow-[0_30px_90px_rgba(2,12,27,0.28)]">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.12),_transparent_42%)]" />
-          <div className="absolute -left-16 top-24 h-56 w-56 rounded-full bg-cyan-300/10 blur-3xl" />
-          <div className="absolute -right-10 bottom-10 h-48 w-48 rounded-full bg-orange-300/10 blur-3xl" />
+    <div className="mx-auto min-h-[calc(100vh-4rem)] max-w-7xl">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_340px]">
+        <section className="relative overflow-hidden rounded-[2.4rem] border border-orange-100 bg-[linear-gradient(180deg,#FFF8F0_0%,#FFF3E3_48%,#FFE7CC_100%)] p-6 text-slate-900 shadow-[0_28px_90px_rgba(154,52,18,0.12)] sm:p-8">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.85),transparent_42%)]" />
+          <div className="absolute -left-16 top-16 h-56 w-56 rounded-full bg-orange-200/30 blur-3xl" />
+          <div className="absolute right-0 top-1/3 h-64 w-64 rounded-full bg-amber-200/30 blur-3xl" />
+          <div className="absolute bottom-0 left-1/3 h-56 w-56 rounded-full bg-rose-200/20 blur-3xl" />
 
           <div className="relative flex h-full flex-col">
-            <header className="flex items-start justify-between gap-6">
-              <div>
-                <p className="text-xs uppercase tracking-[0.3em] text-cyan-200">{focusCopy.eyebrow}</p>
-                <h1 className="mt-3 text-3xl font-semibold sm:text-4xl">{scenario}</h1>
-                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-200 sm:text-base">
+            <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl">
+                <button
+                  type="button"
+                  onClick={onBackToExplorer}
+                  className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-orange-300 hover:bg-white"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  Back to scenarios
+                </button>
+                <p className="mt-5 text-xs uppercase tracking-[0.32em] text-orange-600">
+                  {focusCopy.eyebrow}
+                </p>
+                <h1 className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">
+                  {scenario}
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
                   {scenarioDescription ?? focusCopy.objective}
                 </p>
 
                 <div className="mt-4 flex flex-wrap gap-2">
                   {languageLabel && (
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur">
+                    <span className="rounded-full border border-orange-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-700">
                       {languageLabel}
                     </span>
                   )}
                   {mode && (
-                    <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur">
+                    <span className="rounded-full border border-orange-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-700">
                       {mode === 'free' ? 'Free mode' : 'Guided mode'}
                     </span>
                   )}
+                  <span className="rounded-full border border-orange-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-700">
+                    Focus: immigration checkpoint
+                  </span>
                   <button
                     type="button"
                     onClick={() => setShowTranscript((current) => !current)}
-                    className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white backdrop-blur transition-colors hover:bg-white/15 xl:hidden"
+                    className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-orange-300 hover:bg-white xl:hidden"
                   >
                     <MessageSquareText className="h-3.5 w-3.5" />
                     Transcript
@@ -421,19 +443,27 @@ export function ConversationScreenNew({
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={onFeedback}
-                className="rounded-2xl bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur transition-colors hover:bg-white/15"
-              >
-                Get Feedback
-              </button>
+              <div className="w-full max-w-sm rounded-[2rem] border border-orange-200 bg-white/88 p-4 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.24em] text-orange-600">Key outcome</p>
+                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                  Finish the checkpoint, then review how natural and credible your answers sounded.
+                </p>
+                <button
+                  type="button"
+                  onClick={onFeedback}
+                  disabled={isCompletingSession}
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[1.3rem] bg-gradient-to-r from-orange-500 to-rose-500 px-5 py-4 text-base font-semibold text-white shadow-[0_18px_40px_rgba(249,115,22,0.26)] transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <Sparkles className="h-5 w-5" />
+                  {isCompletingSession ? 'Closing session...' : 'Finish and get feedback'}
+                </button>
+              </div>
             </header>
 
-            <div className="flex flex-1 flex-col items-center justify-center px-4 py-8 text-center">
-              <div className="relative w-full max-w-xl">
-                <div className="absolute inset-x-16 top-14 h-56 rounded-full bg-cyan-300/10 blur-3xl" />
-                <div className="relative mx-auto rounded-[2rem] border border-white/10 bg-white/8 px-8 pb-7 pt-10 backdrop-blur">
+            <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_360px] xl:items-start">
+              <div className="relative">
+                <div className="absolute inset-x-12 top-10 h-56 rounded-full bg-orange-200/45 blur-3xl" />
+                <div className="relative rounded-[2.4rem] border border-white/80 bg-white/70 px-8 pb-8 pt-10 text-center shadow-[0_24px_60px_rgba(120,53,15,0.12)] backdrop-blur">
                   <AnimatedAvatar
                     visibleAvatar={visibleAvatar}
                     avatarGlowClass={avatarGlowClass}
@@ -443,53 +473,143 @@ export function ConversationScreenNew({
                   />
 
                   <div className="mx-auto mt-6 max-w-md text-center">
-                    <div className="inline-flex items-center gap-2 rounded-full bg-slate-950/55 px-4 py-1.5 text-xs font-medium text-white ring-1 ring-white/10 backdrop-blur">
-                      <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                    <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm">
+                      <span className="h-2 w-2 rounded-full bg-orange-500" />
                       {visibleAvatar.name} • {visibleAvatar.role}
                     </div>
+                  </div>
+
+                  <div className="mx-auto mt-8 max-w-xl rounded-[1.8rem] border border-orange-100 bg-[#FFF8F2] px-6 py-5 text-left shadow-inner">
+                    <p className="text-[11px] uppercase tracking-[0.24em] text-orange-600">
+                      {visibleAvatar.name} just said
+                    </p>
+                    <p className="mt-3 text-lg leading-relaxed text-slate-900">
+                      {lastAvatarMessage?.text ?? introMessage ?? focusCopy.objective}
+                    </p>
                   </div>
                 </div>
               </div>
 
-              <div className="mt-10 max-w-2xl">
-                <p className="text-sm uppercase tracking-[0.26em] text-cyan-200">Live status</p>
-                <h2 className="mt-3 text-2xl font-semibold sm:text-3xl">{statusLabel}</h2>
+              <div className="space-y-5">
+                <div className="rounded-[2rem] border border-orange-100 bg-white/88 p-5 text-center shadow-sm">
+                  <p className="text-sm uppercase tracking-[0.24em] text-orange-600">Live status</p>
+                  <h2 className="mt-3 text-2xl font-semibold text-slate-900">{statusLabel}</h2>
 
-                <div className="mt-6 flex items-end justify-center gap-2">
-                  {waveformHeights.map((height, index) => (
-                    <div
-                      key={index}
-                      className={`w-3 rounded-full bg-gradient-to-t from-orange-400 via-orange-300 to-cyan-200 transition-all duration-300 ${height} ${
-                        characterState === 'speaking'
-                          ? index % 2 === 0
-                            ? 'animate-pulse'
+                  <div className="mt-5 flex items-end justify-center gap-2">
+                    {waveformHeights.map((height, index) => (
+                      <div
+                        key={index}
+                        className={`w-3 rounded-full bg-gradient-to-t from-orange-500 via-amber-400 to-orange-200 transition-all duration-300 ${height} ${
+                          characterState === 'speaking'
+                            ? index % 2 === 0
+                              ? 'animate-pulse'
+                              : ''
+                            : recorderState === 'recording'
+                            ? index % 3 === 0
+                              ? 'animate-pulse'
+                              : ''
                             : ''
-                          : recorderState === 'recording'
-                          ? index % 3 === 0
-                            ? 'animate-pulse'
-                            : ''
-                          : ''
-                      }`}
-                    />
-                  ))}
+                        }`}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={
+                      recorderState === 'recording'
+                        ? stopVoiceRecording
+                        : () => void startVoiceRecording()
+                    }
+                    disabled={recorderState === 'transcribing' || isSending}
+                    className={`mx-auto mt-6 flex h-24 w-24 items-center justify-center rounded-full border-8 text-white shadow-[0_18px_45px_rgba(249,115,22,0.28)] transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                      recorderState === 'recording'
+                        ? 'border-red-200 bg-red-500 hover:bg-red-600'
+                        : 'border-orange-100 bg-gradient-to-br from-orange-500 to-orange-600 hover:scale-[1.02]'
+                    }`}
+                  >
+                    {recorderState === 'recording' ? (
+                      <Square className="h-8 w-8" />
+                    ) : (
+                      <Mic className="h-8 w-8" />
+                    )}
+                  </button>
+
+                  <p className="mt-4 text-base font-medium text-slate-700">
+                    {recorderState === 'recording'
+                      ? 'Tap to stop recording'
+                      : recorderState === 'transcribing'
+                      ? 'Transcribing your answer...'
+                      : 'Speak first'}
+                  </p>
+                  <p className="mt-2 text-sm text-slate-500">{focusCopy.pressure}</p>
                 </div>
 
-                <div className="mt-8 rounded-[1.75rem] bg-white/10 p-5 text-left backdrop-blur">
-                  <div className="flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-cyan-200">
-                    <Compass className="h-3.5 w-3.5" />
-                    Scene intent
-                  </div>
-                  <p className="mt-3 text-base leading-relaxed text-white">
-                    {lastAvatarMessage?.text ?? introMessage ?? focusCopy.objective}
-                  </p>
+                <div className="rounded-[2rem] border border-orange-100 bg-white/92 p-5 text-left shadow-sm">
+                  <form onSubmit={handleSendMessage} className="space-y-4">
+                    <textarea
+                      value={draft}
+                      onChange={(event) => setDraft(event.target.value)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' && !event.shiftKey) {
+                          event.preventDefault();
+                          handleSendMessage(event as any);
+                        }
+                      }}
+                      placeholder="Type your answer if you prefer, or use the mic..."
+                      rows={5}
+                      className="w-full resize-none rounded-[1.4rem] border border-orange-100 bg-[#FFF8F2] px-5 py-4 text-base text-slate-900 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
+                    />
+
+                    <div className="flex flex-wrap gap-2">
+                      {vocabularyHints?.slice(0, 3).map((hint) => (
+                        <span
+                          key={hint}
+                          className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700"
+                        >
+                          {hint}
+                        </span>
+                      ))}
+                    </div>
+
+                    <div className="space-y-3">
+                      {lastSpokenText && (
+                        <button
+                          type="button"
+                          onClick={() => void playAvatarSpeech(lastSpokenText)}
+                          className="inline-flex items-center gap-2 rounded-2xl border border-orange-200 bg-white px-4 py-3 font-medium text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
+                        >
+                          <Play className="h-4 w-4" />
+                          Replay voice
+                        </button>
+                      )}
+
+                      <div className="text-sm text-slate-500">
+                        {isSending
+                          ? 'Sending...'
+                          : recorderState === 'transcribing'
+                          ? 'Transcribing your answer...'
+                          : 'Use voice first, text if needed'}
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={isSending || recorderState !== 'idle' || !draft.trim()}
+                        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Send className="h-4 w-4" />
+                        Send answer
+                      </button>
+                    </div>
+                  </form>
                 </div>
               </div>
             </div>
 
             <div className="relative mt-auto space-y-4">
               {showTranscript && (
-                <div className="rounded-[1.75rem] bg-white/10 p-4 backdrop-blur xl:hidden">
-                  <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-cyan-200">
+                <div className="rounded-[1.75rem] border border-orange-100 bg-white/80 p-4 xl:hidden">
+                  <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-orange-600">
                     <MessageSquareText className="h-3.5 w-3.5" />
                     Transcript
                   </div>
@@ -497,13 +617,13 @@ export function ConversationScreenNew({
                     {messages.map((message, index) => (
                       <div
                         key={`${message.sender}-${index}`}
-                        className={`rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                        className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
                           message.sender === 'user'
-                            ? 'ml-8 bg-white/15 text-white'
-                            : 'mr-8 bg-slate-950/40 text-slate-100'
+                            ? 'ml-8 bg-orange-50 text-slate-900'
+                            : 'mr-8 bg-white text-slate-900'
                         }`}
                       >
-                        <p className="mb-1 text-[11px] uppercase tracking-[0.2em] text-cyan-200/80">
+                        <p className="mb-1 text-[11px] uppercase tracking-[0.2em] text-orange-500/80">
                           {message.sender === 'user' ? 'You' : visibleAvatar.name}
                         </p>
                         <p>{message.text}</p>
@@ -513,100 +633,9 @@ export function ConversationScreenNew({
                 </div>
               )}
 
-              <div className="rounded-[1.9rem] bg-white/12 p-4 backdrop-blur">
-                <form onSubmit={handleSendMessage} className="space-y-4">
-                  <textarea
-                    value={draft}
-                    onChange={(event) => setDraft(event.target.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === 'Enter' && !event.shiftKey) {
-                        event.preventDefault();
-                        handleSendMessage(event as any);
-                      }
-                    }}
-                    placeholder="Speak, or type a short reply if you need to..."
-                    rows={3}
-                    className="w-full resize-none rounded-[1.5rem] border border-white/10 bg-slate-950/25 px-5 py-4 text-base text-white placeholder:text-slate-300/70 outline-none transition-colors focus:border-cyan-300/60 focus:ring-2 focus:ring-cyan-200/30"
-                  />
-
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex flex-wrap gap-2">
-                      {vocabularyHints?.slice(0, 3).map((hint) => (
-                        <span
-                          key={hint}
-                          className="rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-white"
-                        >
-                          {hint}
-                        </span>
-                      ))}
-                    </div>
-
-                    <div className="text-sm text-slate-200">
-                      {recorderState === 'recording'
-                        ? 'Recording... tap stop when you are done'
-                        : recorderState === 'transcribing'
-                        ? 'Transcribing your answer...'
-                        : isSending
-                        ? 'Sending...'
-                        : 'Voice first, text if needed'}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={
-                          recorderState === 'recording'
-                            ? stopVoiceRecording
-                            : () => void startVoiceRecording()
-                        }
-                        disabled={recorderState === 'transcribing' || isSending}
-                        className={`inline-flex items-center gap-2 rounded-2xl px-5 py-3 font-medium shadow-sm transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
-                          recorderState === 'recording'
-                            ? 'bg-red-500 text-white hover:bg-red-600'
-                            : 'bg-white text-slate-900 hover:bg-slate-100'
-                        }`}
-                      >
-                        {recorderState === 'recording' ? (
-                          <>
-                            <Square className="h-4 w-4" />
-                            Stop recording
-                          </>
-                        ) : (
-                          <>
-                            <Mic className="h-4 w-4" />
-                            Speak
-                          </>
-                        )}
-                      </button>
-
-                      {lastSpokenText && (
-                        <button
-                          type="button"
-                          onClick={() => void playAvatarSpeech(lastSpokenText)}
-                          className="inline-flex items-center gap-2 rounded-2xl bg-white/10 px-4 py-3 font-medium text-white transition-colors hover:bg-white/15"
-                        >
-                          <Play className="h-4 w-4" />
-                          Replay voice
-                        </button>
-                      )}
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={isSending || recorderState !== 'idle' || !draft.trim()}
-                      className="inline-flex items-center gap-2 rounded-2xl bg-orange-500 px-5 py-3 font-medium text-white shadow-sm transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      <Send className="h-4 w-4" />
-                      Send answer
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              {(error || audioError) && (
+              {(actionError || error || audioError) && (
                 <div className="space-y-3">
+                  {actionError && <ErrorMessage message={actionError} />}
                   {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
                   {audioError && <ErrorMessage message={audioError} onRetry={() => setAudioError(null)} />}
                 </div>
@@ -615,11 +644,11 @@ export function ConversationScreenNew({
           </div>
         </section>
 
-        <aside className="hidden h-full flex-col rounded-[2rem] bg-white p-5 shadow-sm ring-1 ring-gray-200 xl:flex">
-          <div className="flex items-center justify-between gap-3 border-b border-gray-100 pb-4">
+        <aside className="hidden h-full flex-col rounded-[2rem] border border-orange-100 bg-white p-5 shadow-sm xl:flex">
+          <div className="flex items-center justify-between gap-3 border-b border-orange-100 pb-4">
             <div>
               <p className="text-xs uppercase tracking-[0.25em] text-orange-500">Transcript</p>
-              <h3 className="mt-2 text-xl font-semibold text-gray-900">Secondary panel</h3>
+              <h3 className="mt-2 text-xl font-semibold text-slate-900">Conversation log</h3>
             </div>
             <Volume2 className="h-5 w-5 text-gray-400" />
           </div>
@@ -635,10 +664,10 @@ export function ConversationScreenNew({
               messages.map((message, index) => (
                 <div
                   key={`${message.sender}-${index}`}
-                  className={`rounded-2xl px-4 py-3 ${
+                  className={`rounded-2xl px-4 py-3 shadow-sm ${
                     message.sender === 'user'
                       ? 'ml-8 bg-[#EEF9F7] text-gray-900'
-                      : 'mr-8 bg-slate-50 text-gray-900'
+                      : 'mr-8 bg-orange-50 text-gray-900'
                   }`}
                 >
                   <p className="mb-1 text-[11px] uppercase tracking-[0.22em] text-gray-400">
@@ -649,11 +678,15 @@ export function ConversationScreenNew({
               ))}
           </div>
 
-          <div className="mt-5 rounded-2xl bg-slate-50 p-4">
-            <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Cultural cue</p>
-            <p className="mt-2 text-sm leading-relaxed text-gray-700">
+          <div className="mt-5 rounded-[1.75rem] border border-orange-100 bg-[#FFF8F2] p-4">
+            <p className="text-xs uppercase tracking-[0.22em] text-orange-600">Cultural cue</p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-700">
               {culturalTip ?? 'Listen for local cues, then keep your reply simple and natural.'}
             </p>
+            <div className="mt-4 rounded-2xl bg-white px-4 py-3">
+              <p className="text-xs uppercase tracking-[0.22em] text-slate-500">Pressure line</p>
+              <p className="mt-2 text-sm leading-relaxed text-slate-700">{focusCopy.pressure}</p>
+            </div>
           </div>
         </aside>
       </div>

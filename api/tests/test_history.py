@@ -32,13 +32,15 @@ def override_get_current_user_claims() -> dict[str, str]:
     return {"sub": "history-user", "email": "history@example.com"}
 
 
-app.dependency_overrides[get_db_session] = override_get_db_session
-app.dependency_overrides[get_current_user_claims] = override_get_current_user_claims
-
-
 def setup_function() -> None:
+    app.dependency_overrides[get_db_session] = override_get_db_session
+    app.dependency_overrides[get_current_user_claims] = override_get_current_user_claims
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+
+
+def teardown_function() -> None:
+    app.dependency_overrides.clear()
 
 
 def seed_history() -> str:
@@ -113,3 +115,21 @@ def test_history_lists_only_current_user_sessions() -> None:
     assert data[0]["level_at_start"] == "Intermédiaire"
     assert data[0]["last_message_preview"] == "Bienvenue au Chili, on peut parler de Santiago."
     assert data[0]["has_feedback"] is False
+
+
+def test_complete_session_updates_history_status() -> None:
+    owned_session_id = seed_history()
+
+    client = TestClient(app)
+
+    complete_response = client.post(f"/api/v1/conversation-sessions/{owned_session_id}/complete")
+    assert complete_response.status_code == 200
+    assert complete_response.json()["status"] == "completed"
+    assert complete_response.json()["ended_at"] is not None
+
+    history_response = client.get("/api/v1/me/conversation-sessions")
+    assert history_response.status_code == 200
+    data = history_response.json()
+    assert len(data) == 1
+    assert data[0]["status"] == "completed"
+    assert data[0]["ended_at"] is not None

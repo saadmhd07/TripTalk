@@ -32,13 +32,15 @@ def override_get_current_user_claims() -> dict[str, str]:
     return {"sub": "profile-user", "email": "profile@example.com"}
 
 
-app.dependency_overrides[get_db_session] = override_get_db_session
-app.dependency_overrides[get_current_user_claims] = override_get_current_user_claims
-
-
 def setup_function() -> None:
+    app.dependency_overrides[get_db_session] = override_get_db_session
+    app.dependency_overrides[get_current_user_claims] = override_get_current_user_claims
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+
+
+def teardown_function() -> None:
+    app.dependency_overrides.clear()
 
 
 def test_get_me_creates_user_and_returns_empty_profile() -> None:
