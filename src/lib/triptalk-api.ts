@@ -59,6 +59,18 @@ export async function createConversationSession(
   return response.json();
 }
 
+export async function completeConversationSession(
+  sessionId: string
+): Promise<{ id: string; status: 'active' | 'completed' | 'abandoned' }> {
+  const response = await apiFetch(`/conversation-sessions/${sessionId}/complete`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error('Failed to complete conversation session');
+  }
+  return response.json();
+}
+
 export async function fetchConversationMessages(sessionId: string): Promise<MessageApiItem[]> {
   const response = await apiFetch(`/conversation-sessions/${sessionId}/messages`);
   if (!response.ok) {

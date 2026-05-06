@@ -32,13 +32,15 @@ def override_get_current_user_claims() -> dict[str, str]:
     return {"sub": "owner-user", "email": "owner@example.com"}
 
 
-app.dependency_overrides[get_db_session] = override_get_db_session
-app.dependency_overrides[get_current_user_claims] = override_get_current_user_claims
-
-
 def setup_function() -> None:
+    app.dependency_overrides[get_db_session] = override_get_db_session
+    app.dependency_overrides[get_current_user_claims] = override_get_current_user_claims
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+
+
+def teardown_function() -> None:
+    app.dependency_overrides.clear()
 
 
 def seed_owned_and_foreign_sessions() -> tuple[str, str]:

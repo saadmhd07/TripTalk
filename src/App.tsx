@@ -9,6 +9,7 @@ import { ConversationScreenNew as ConversationScreen } from './components/Conver
 import { FeedbackScreen } from './components/FeedbackScreen';
 import { ProfileScreen } from './components/ProfileScreen';
 import {
+  completeConversationSession,
   createConversationSession,
   fetchMyConversationHistory,
   fetchMyLanguageLevel,
@@ -43,6 +44,7 @@ export default function App() {
   const [historyItems, setHistoryItems] = useState<ConversationSessionHistoryApiResponse[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
+  const [isCompletingSession, setIsCompletingSession] = useState(false);
 
   function parseVocabularyHints(raw: string | null | undefined): string[] | null {
     if (!raw) {
@@ -72,6 +74,7 @@ export default function App() {
     setHistoryItems([]);
     setHistoryLoading(false);
     setHistoryError(null);
+    setIsCompletingSession(false);
   }
 
   function getActiveSection(): 'explorer' | 'history' | 'profile' | 'conversation' {
@@ -248,6 +251,15 @@ export default function App() {
     setCurrentScreen('explorer');
   }
 
+  function openConversation() {
+    if (sessionId && selectedScenario) {
+      setCurrentScreen('conversation');
+      return;
+    }
+
+    setCurrentScreen('explorer');
+  }
+
   function startNewConversation() {
     setSelectedLevel(null);
     setSelectedCountry(null);
@@ -255,7 +267,26 @@ export default function App() {
     setSelectedScenario(null);
     setSessionId(null);
     setProfileError(null);
+    setIsCompletingSession(false);
     setCurrentScreen('explorer');
+  }
+
+  async function handleOpenFeedback() {
+    if (!sessionId) {
+      setProfileError("Impossible de retrouver la session active.");
+      return;
+    }
+
+    try {
+      setIsCompletingSession(true);
+      setProfileError(null);
+      await completeConversationSession(sessionId);
+      setCurrentScreen('feedback');
+    } catch {
+      setProfileError("Impossible de terminer la session pour générer le feedback.");
+    } finally {
+      setIsCompletingSession(false);
+    }
   }
 
   function handleOpenConversationFromHistory(item: ConversationSessionHistoryApiResponse) {
@@ -322,7 +353,7 @@ export default function App() {
         activeSection={getActiveSection()}
         userEmail={profile?.email ?? session?.user.email ?? ''}
         onGoExplorer={openExplorer}
-        onGoConversation={openExplorer}
+        onGoConversation={openConversation}
         onGoHistory={openHistory}
         onGoProfile={openProfile}
         onSignOut={() => void handleSignOut()}
@@ -374,8 +405,10 @@ export default function App() {
           vocabularyHints={parseVocabularyHints(selectedScenario?.vocabulary_hints)}
           partnerName={selectedScenario?.partner_name}
           partnerRole={selectedScenario?.partner_role}
+          actionError={profileError}
           onBackToExplorer={openExplorer}
-          onFeedback={() => setCurrentScreen('feedback')}
+          onFeedback={() => void handleOpenFeedback()}
+          isCompletingSession={isCompletingSession}
         />
       )}
       {currentScreen === 'feedback' && (

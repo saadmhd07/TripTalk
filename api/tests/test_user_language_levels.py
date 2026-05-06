@@ -8,6 +8,7 @@ from sqlalchemy.pool import StaticPool
 from app.api.deps import get_current_user_claims, get_db_session
 from app.core.database import Base
 from app.main import app
+from app.models import User, UserLanguageLevel
 
 
 engine = create_engine(
@@ -31,13 +32,15 @@ def override_get_current_user_claims() -> dict[str, str]:
     return {"sub": "language-user", "email": "language@example.com"}
 
 
-app.dependency_overrides[get_db_session] = override_get_db_session
-app.dependency_overrides[get_current_user_claims] = override_get_current_user_claims
-
-
 def setup_function() -> None:
+    app.dependency_overrides[get_db_session] = override_get_db_session
+    app.dependency_overrides[get_current_user_claims] = override_get_current_user_claims
     Base.metadata.drop_all(bind=engine)
     Base.metadata.create_all(bind=engine)
+
+
+def teardown_function() -> None:
+    app.dependency_overrides.clear()
 
 
 def test_get_language_level_returns_none_when_missing() -> None:

@@ -28,11 +28,15 @@ def test_seed_service_uses_rich_prompt_files() -> None:
         seed_service.seed_reference_data(db)
 
         chile_airport = db.query(Scenario).filter(Scenario.slug == "aeroport-santiago").one()
+        chile_immigration = db.query(Scenario).filter(Scenario.slug == "immigration-santiago").one()
         usa_coffee = db.query(Scenario).filter(Scenario.slug == "order-coffee").one()
 
         assert "ROLE:" in chile_airport.system_prompt
         assert "CHILEAN SPANISH STYLE:" in chile_airport.system_prompt
         assert "Tarjeta Bip!" in chile_airport.system_prompt
+        assert "Oficial Ramírez" in chile_immigration.system_prompt
+        assert "PDI" in chile_immigration.system_prompt
+        assert chile_immigration.partner_name == "Oficial Ramírez"
         assert "BROOKLYN/NYC CULTURE" in usa_coffee.system_prompt
         assert usa_coffee.partner_name == "Maya"
 

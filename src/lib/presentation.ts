@@ -19,24 +19,27 @@ const countryOverrides: Record<
   string,
   {
     flag: string;
-    description: string;
+    tagline: string;
     image: string;
     gradient: string;
+    bgColor: string;
   }
 > = {
   Chile: {
     flag: '🇨🇱',
-    description: 'Espagnol chilien avec expressions locales typiques',
+    tagline: 'Espagnol chilien avec expressions locales typiques',
     image:
       'https://images.unsplash.com/photo-1593985437133-03d5e1435c03?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxDaGlsZSUyMFNhbnRpYWdvJTIwY2l0eXNjYXBlfGVufDF8fHx8MTc2NTIzMjU1N3ww&ixlib=rb-4.1.0&q=80&w=1080',
     gradient: 'from-red-500/90 to-blue-600/90',
+    bgColor: 'bg-gradient-to-br from-red-500 to-blue-600',
   },
   USA: {
     flag: '🇺🇸',
-    description: 'Anglais américain avec culture et expressions US',
+    tagline: 'Anglais américain avec culture et expressions US',
     image:
       'https://images.unsplash.com/photo-1542223616-9de9adb5e3e8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxVU0ElMjBBbWVyaWNhbiUyMGNpdHlzY2FwZXxlbnwxfHx8fDE3NjUyMzI1NTh8MA&ixlib=rb-4.1.0&q=80&w=1080',
     gradient: 'from-blue-600/90 to-red-500/90',
+    bgColor: 'bg-gradient-to-br from-blue-600 to-red-500',
   },
 };
 
@@ -62,10 +65,11 @@ export function getCountryPresentation(countryName: string, countryCode?: string
 
   return {
     flag: countryCode ? countryFlagByCode[countryCode.toUpperCase()] ?? '🌍' : '🌍',
-    description: `Explore des scénarios réalistes liés à ${countryName}.`,
+    tagline: `Explore des scénarios réalistes liés à ${countryName}.`,
     image:
       'https://images.unsplash.com/photo-1521295121783-8a321d551ad2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
     gradient: 'from-slate-700/80 to-emerald-600/80',
+    bgColor: 'bg-gradient-to-br from-slate-700 to-emerald-600',
   };
 }
 
@@ -81,6 +85,11 @@ const scenarioSlugPresentation: Record<
     icon: Plane,
     color: 'bg-sky-50 text-sky-700',
     iconColor: 'text-sky-500',
+  },
+  'immigration-santiago': {
+    icon: Building2,
+    color: 'bg-slate-50 text-slate-700',
+    iconColor: 'text-slate-500',
   },
   'taxi-uber-santiago': {
     icon: Car,
@@ -161,11 +170,32 @@ const avatarOverrides: Record<
   },
 };
 
+const partnerAvatarOverrides: Record<
+  string,
+  {
+    name: string;
+    emoji: string;
+    avatarId?: string;
+    imageUrl?: string;
+    bgColor: string;
+    role: string;
+  }
+> = {
+  'Oficial Ramírez': {
+    name: 'Oficial Ramírez',
+    emoji: '👮🏽',
+    avatarId: 'oficial-ramirez',
+    bgColor: 'bg-gradient-to-br from-slate-700 to-slate-900',
+    role: 'Control de Pasaportes · PDI',
+  },
+};
+
 export function getConversationAvatarPresentation(
   countryName: string,
   partnerName?: string,
   partnerRole?: string
 ) {
+  const partnerOverride = partnerName ? partnerAvatarOverrides[partnerName] : undefined;
   const fallback = avatarOverrides[countryName] ?? {
     name: countryName,
     emoji: '🧑',
@@ -175,9 +205,9 @@ export function getConversationAvatarPresentation(
   };
 
   return {
-    ...fallback,
-    name: partnerName || fallback.name,
-    role: partnerRole || fallback.role,
+    ...(partnerOverride ?? fallback),
+    name: partnerName || partnerOverride?.name || fallback.name,
+    role: partnerRole || partnerOverride?.role || fallback.role,
   };
 }
 

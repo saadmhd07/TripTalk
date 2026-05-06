@@ -49,8 +49,9 @@ class ConversationRepository:
         return db.scalar(stmt)
 
     def complete_session(self, db: Session, session: ConversationSession) -> ConversationSession:
-        session.status = ConversationSessionStatus.COMPLETED.value
-        session.ended_at = datetime.now(UTC)
+        if session.status != ConversationSessionStatus.COMPLETED.value:
+            session.status = ConversationSessionStatus.COMPLETED.value
+            session.ended_at = datetime.now(UTC)
         db.flush()
         return session
 
