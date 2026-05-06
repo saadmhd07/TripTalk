@@ -140,11 +140,14 @@ export function ConversationScreenNew({
   const [lastSpokenText, setLastSpokenText] = useState<string | null>(null);
   const [recorderState, setRecorderState] = useState<RecorderState>('idle');
   const [showTranscript, setShowTranscript] = useState(false);
+  const [showTextFallback, setShowTextFallback] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
   const hasAutoPlayedInitialMessageRef = useRef(false);
+  const desktopTranscriptRef = useRef<HTMLDivElement | null>(null);
+  const mobileTranscriptRef = useRef<HTMLDivElement | null>(null);
 
   const visibleAvatar = getConversationAvatarPresentation(
     country,
@@ -218,6 +221,18 @@ export function ConversationScreenNew({
       }
     };
   }, []);
+
+  useEffect(() => {
+    const scrollToBottom = (element: HTMLDivElement | null) => {
+      if (!element) {
+        return;
+      }
+      element.scrollTop = element.scrollHeight;
+    };
+
+    scrollToBottom(desktopTranscriptRef.current);
+    scrollToBottom(mobileTranscriptRef.current);
+  }, [messages, isLoadingHistory, showTranscript]);
 
   function stopAudioPlayback() {
     if (audioRef.current) {
@@ -415,28 +430,40 @@ export function ConversationScreenNew({
       : characterState === 'thinking'
       ? 'Thinking...'
       : null;
+  const showFallbackInput =
+    showTextFallback || draft.trim().length > 0 || recorderState === 'transcribing';
 
   return (
     <div className="mx-auto min-h-[calc(100vh-4rem)] max-w-7xl">
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.45fr)_340px]">
-        <section className="relative overflow-hidden rounded-[2.4rem] border border-orange-100 bg-[linear-gradient(180deg,#FFF8F0_0%,#FFF3E3_48%,#FFE7CC_100%)] p-6 text-slate-900 shadow-[0_28px_90px_rgba(154,52,18,0.12)] sm:p-8">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.85),transparent_42%)]" />
-          <div className="absolute -left-16 top-16 h-56 w-56 rounded-full bg-orange-200/30 blur-3xl" />
-          <div className="absolute right-0 top-1/3 h-64 w-64 rounded-full bg-amber-200/30 blur-3xl" />
-          <div className="absolute bottom-0 left-1/3 h-56 w-56 rounded-full bg-rose-200/20 blur-3xl" />
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="relative overflow-hidden rounded-[2.4rem] border border-orange-100 bg-[linear-gradient(180deg,#FFF7ED_0%,#FFEED8_55%,#FFE5C2_100%)] p-5 shadow-[0_28px_90px_rgba(154,52,18,0.12)] sm:p-6 xl:h-[calc(100vh-4rem)]">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.82),transparent_42%)]" />
+          <div className="absolute inset-x-24 top-20 h-72 rounded-full bg-orange-200/40 blur-3xl" />
+          <div className="absolute -right-10 bottom-8 h-64 w-64 rounded-full bg-amber-200/30 blur-3xl" />
 
-          <div className="relative flex h-full flex-col">
-            <header className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="relative flex min-h-[calc(100vh-9rem)] flex-col">
+            <header className="flex flex-wrap items-start justify-between gap-4">
               <div className="max-w-3xl">
-                <button
-                  type="button"
-                  onClick={onBackToExplorer}
-                  className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-orange-300 hover:bg-white"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Back to scenarios
-                </button>
-                <p className="mt-5 text-xs uppercase tracking-[0.32em] text-orange-600">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={onBackToExplorer}
+                    className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/85 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-orange-300 hover:bg-white"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back to scenarios
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowTranscript((current) => !current)}
+                    className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/85 px-4 py-2 text-sm font-medium text-slate-700 transition hover:border-orange-300 hover:bg-white xl:hidden"
+                  >
+                    <MessageSquareText className="h-4 w-4" />
+                    Transcript
+                  </button>
+                </div>
+
+                <p className="mt-4 text-xs uppercase tracking-[0.3em] text-orange-600">
                   {focusCopy.eyebrow}
                 </p>
                 <h1 className="mt-3 text-3xl font-semibold text-slate-900 sm:text-4xl">
@@ -457,62 +484,54 @@ export function ConversationScreenNew({
                       {mode === 'free' ? 'Free mode' : 'Guided mode'}
                     </span>
                   )}
-                  <span className="rounded-full border border-orange-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-700">
-                    Focus: immigration checkpoint
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => setShowTranscript((current) => !current)}
-                    className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/80 px-3 py-1 text-xs font-medium text-slate-700 transition hover:border-orange-300 hover:bg-white xl:hidden"
-                  >
-                    <MessageSquareText className="h-3.5 w-3.5" />
-                    Transcript
-                  </button>
                 </div>
               </div>
 
-              <div className="w-full max-w-sm rounded-[2rem] border border-orange-100 bg-white/78 p-4 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.24em] text-slate-500">After this checkpoint</p>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
-                  Finish the checkpoint, then review how natural and credible your answers sounded.
-                </p>
-                <button
-                  type="button"
-                  onClick={onFeedback}
-                  disabled={isCompletingSession}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[1.3rem] border border-orange-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <Sparkles className="h-5 w-5" />
-                  {isCompletingSession ? 'Closing session...' : 'Finish and open feedback'}
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={onFeedback}
+                disabled={isCompletingSession}
+                className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white/85 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <Sparkles className="h-4 w-4" />
+                {isCompletingSession ? 'Closing session...' : 'End session'}
+              </button>
             </header>
 
-            <div className="mt-8 grid gap-6 xl:grid-cols-[minmax(0,1.08fr)_360px] xl:items-start">
-              <div className="relative">
-                <div className="absolute inset-x-12 top-10 h-56 rounded-full bg-orange-200/45 blur-3xl" />
-                <div className="relative rounded-[2.4rem] border border-white/80 bg-white/70 px-8 pb-8 pt-10 text-center shadow-[0_24px_60px_rgba(120,53,15,0.12)] backdrop-blur">
-                  <AnimatedAvatar
-                    visibleAvatar={visibleAvatar}
-                    avatarGlowClass={avatarGlowClass}
-                    portraitMotionClass={portraitMotionClass}
-                    characterState={characterState}
-                    recorderState={recorderState}
-                  />
+            <div className="mt-6 flex flex-1 flex-col justify-between">
+              <div className="flex flex-1 items-center justify-center">
+                <div className="w-full max-w-5xl">
+                  <div className="relative overflow-hidden rounded-[2.6rem] border border-white/70 bg-white/38 px-6 pb-8 pt-8 text-center shadow-[0_26px_70px_rgba(120,53,15,0.14)] backdrop-blur">
+                    <div className="absolute inset-x-10 top-10 h-56 rounded-full bg-white/35 blur-3xl" />
+                    <div className="relative">
+                      <AnimatedAvatar
+                        visibleAvatar={visibleAvatar}
+                        avatarGlowClass={avatarGlowClass}
+                        portraitMotionClass={portraitMotionClass}
+                        characterState={characterState}
+                        recorderState={recorderState}
+                      />
 
-                  <div className="mx-auto mt-6 max-w-md text-center">
-                    <div className="inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm">
-                      <span className="h-2 w-2 rounded-full bg-orange-500" />
-                      {visibleAvatar.name} • {visibleAvatar.role}
+                      <div className="mx-auto mt-5 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm">
+                        <span className="h-2 w-2 rounded-full bg-orange-500" />
+                        {visibleAvatar.name} • {visibleAvatar.role}
+                      </div>
                     </div>
                   </div>
+                </div>
+              </div>
 
-                  <div className="mx-auto mt-8 max-w-xl rounded-[1.8rem] border border-orange-100 bg-[#FFF8F2] px-6 py-5 text-left shadow-inner">
-                    <p className="text-lg leading-relaxed text-slate-900">
-                      {lastAvatarMessage?.text ?? introMessage ?? focusCopy.objective}
-                    </p>
+              <div className="mt-6 rounded-[2rem] border border-orange-100 bg-white/90 p-5 shadow-sm">
+                <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px] xl:items-start">
+                  <div className="space-y-4">
+                    <div className="rounded-[1.8rem] bg-[#FFF8F2] px-5 py-4 text-slate-900 shadow-inner">
+                      <p className="text-lg leading-relaxed">
+                        {lastAvatarMessage?.text ?? introMessage ?? focusCopy.objective}
+                      </p>
+                    </div>
+
                     {vocabularyHints && vocabularyHints.length > 0 && (
-                      <div className="mt-4 flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2">
                         {vocabularyHints.slice(0, 4).map((hint) => (
                           <span
                             key={hint}
@@ -524,154 +543,162 @@ export function ConversationScreenNew({
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
 
-              <div className="space-y-5">
-                <div className="rounded-[2rem] border border-orange-100 bg-white/88 p-5 text-center shadow-sm">
-                  <div className="flex min-h-7 items-center justify-center">
-                    {activeStatusCopy ? (
-                      <p className="text-sm font-medium text-slate-700">{activeStatusCopy}</p>
-                    ) : (
-                      <p className="text-sm text-slate-400"> </p>
-                    )}
-                  </div>
-
-                  <div className="mt-3 flex items-end justify-center gap-2">
-                    {waveformHeights.map((height, index) => (
-                      <div
-                        key={index}
-                        className={`w-3 rounded-full bg-gradient-to-t from-orange-500 via-amber-400 to-orange-200 transition-all duration-300 ${height} ${
-                          characterState === 'speaking'
-                            ? index % 2 === 0
-                              ? 'animate-pulse'
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-center gap-2">
+                      {waveformHeights.map((height, index) => (
+                        <div
+                          key={index}
+                          className={`w-3 rounded-full bg-gradient-to-t from-orange-500 via-amber-400 to-orange-200 transition-all duration-300 ${height} ${
+                            characterState === 'speaking'
+                              ? index % 2 === 0
+                                ? 'animate-pulse'
+                                : ''
+                              : recorderState === 'recording'
+                              ? index % 3 === 0
+                                ? 'animate-pulse'
+                                : ''
                               : ''
-                            : recorderState === 'recording'
-                            ? index % 3 === 0
-                              ? 'animate-pulse'
-                              : ''
-                            : ''
-                        }`}
-                      />
-                    ))}
-                  </div>
+                          }`}
+                        />
+                      ))}
+                    </div>
 
-                  <button
-                    type="button"
-                    onClick={
-                      recorderState === 'recording'
-                        ? stopVoiceRecording
-                        : () => void startVoiceRecording()
-                    }
-                    disabled={recorderState === 'transcribing' || isSending}
-                    className={`mx-auto mt-6 flex h-24 w-24 items-center justify-center rounded-full border-8 text-white shadow-[0_18px_45px_rgba(249,115,22,0.28)] transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                      recorderState === 'recording'
-                        ? 'border-red-200 bg-red-500 hover:bg-red-600'
-                        : 'border-orange-100 bg-gradient-to-br from-orange-500 to-orange-600 hover:scale-[1.02]'
-                    }`}
-                  >
-                    {recorderState === 'recording' ? (
-                      <Square className="h-8 w-8" />
-                    ) : (
-                      <Mic className="h-8 w-8" />
+                    {activeStatusCopy && (
+                      <p className="text-center text-sm font-medium text-slate-600">
+                        {activeStatusCopy}
+                      </p>
                     )}
-                  </button>
 
-                  <p className="mt-4 text-base font-medium text-slate-700">
-                    {recorderState === 'recording' ? 'Stop recording' : 'Speak first'}
-                  </p>
-                  <p className="mt-2 text-sm text-slate-500">{focusCopy.pressure}</p>
-                </div>
-
-                <div className="rounded-[2rem] border border-orange-100 bg-white/92 p-5 text-left shadow-sm">
-                  <form onSubmit={handleSendMessage} className="space-y-4">
-                    <textarea
-                      value={draft}
-                      onChange={(event) => setDraft(event.target.value)}
-                      onKeyDown={(event) => {
-                        if (event.key === 'Enter' && !event.shiftKey) {
-                          event.preventDefault();
-                          handleSendMessage(event as any);
-                        }
-                      }}
-                      placeholder="Type your answer if you prefer, or use the mic..."
-                      rows={6}
-                      className="w-full resize-none rounded-[1.4rem] border border-orange-100 bg-[#FFF8F2] px-5 py-4 text-base text-slate-900 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
-                    />
-
-                    <div className="space-y-3">
+                    <div className="flex items-center justify-center gap-4">
                       {lastSpokenText && (
                         <button
                           type="button"
                           onClick={() => void playAvatarSpeech(lastSpokenText)}
-                          className="inline-flex items-center gap-2 rounded-2xl border border-orange-200 bg-white px-4 py-3 font-medium text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
+                          className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-orange-200 bg-white text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
+                          aria-label="Replay voice"
                         >
-                          <Play className="h-4 w-4" />
-                          Replay voice
+                          <Play className="h-5 w-5" />
                         </button>
                       )}
 
-                      <div className="text-sm text-slate-500">
-                        {isSending
-                          ? 'Sending...'
-                          : recorderState === 'transcribing'
-                          ? 'Transcribing your answer...'
-                          : 'Use voice first, text if needed'}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={
+                          recorderState === 'recording'
+                            ? stopVoiceRecording
+                            : () => void startVoiceRecording()
+                        }
+                        disabled={recorderState === 'transcribing' || isSending}
+                        className={`flex h-24 w-24 items-center justify-center rounded-full border-8 text-white shadow-[0_20px_45px_rgba(249,115,22,0.3)] transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                          recorderState === 'recording'
+                            ? 'border-red-200 bg-red-500 hover:bg-red-600'
+                            : 'border-orange-100 bg-gradient-to-br from-orange-500 to-orange-600 hover:scale-[1.02]'
+                        }`}
+                        aria-label={recorderState === 'recording' ? 'Stop recording' : 'Start recording'}
+                      >
+                        {recorderState === 'recording' ? (
+                          <Square className="h-8 w-8" />
+                        ) : (
+                          <Mic className="h-8 w-8" />
+                        )}
+                      </button>
 
                       <button
-                        type="submit"
-                        disabled={isSending || recorderState !== 'idle' || !draft.trim()}
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        type="button"
+                        onClick={() => setShowTextFallback((current) => !current)}
+                        className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-orange-200 bg-white text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
+                        aria-label={showFallbackInput ? 'Hide text fallback' : 'Open text fallback'}
                       >
-                        <Send className="h-4 w-4" />
-                        Send answer
+                        <MessageSquareText className="h-5 w-5" />
                       </button>
                     </div>
-                  </form>
+
+                    <p className="text-center text-sm text-slate-500">{focusCopy.pressure}</p>
+                  </div>
                 </div>
+
+                {showFallbackInput && (
+                  <div className="mt-5 rounded-[1.8rem] border border-orange-100 bg-[#FFF8F2] p-4">
+                    <form onSubmit={handleSendMessage} className="space-y-4">
+                      <textarea
+                        value={draft}
+                        onChange={(event) => setDraft(event.target.value)}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter' && !event.shiftKey) {
+                            event.preventDefault();
+                            handleSendMessage(event as any);
+                          }
+                        }}
+                        placeholder="Fallback text input if you prefer not to speak..."
+                        rows={4}
+                        className="w-full resize-none rounded-[1.4rem] border border-orange-100 bg-white px-5 py-4 text-base text-slate-900 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
+                      />
+
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="text-sm text-slate-500">
+                          {isSending
+                            ? 'Sending...'
+                            : recorderState === 'transcribing'
+                            ? 'Transcribing your answer...'
+                            : 'Text is fallback only. Voice is primary.'}
+                        </div>
+
+                        <button
+                          type="submit"
+                          disabled={isSending || recorderState !== 'idle' || !draft.trim()}
+                          className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <Send className="h-4 w-4" />
+                          Send answer
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="relative mt-auto space-y-4">
-              {showTranscript && (
-                <div className="rounded-[1.75rem] border border-orange-100 bg-white/80 p-4 xl:hidden">
-                  <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-orange-600">
-                    <MessageSquareText className="h-3.5 w-3.5" />
-                    Transcript
-                  </div>
-                  <div className="max-h-48 space-y-3 overflow-y-auto pr-1">
-                    {messages.map((message, index) => (
-                      <div
-                        key={`${message.sender}-${index}`}
-                        className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
-                          message.sender === 'user'
-                            ? 'ml-8 bg-orange-50 text-slate-900'
-                            : 'mr-8 bg-white text-slate-900'
-                        }`}
-                      >
-                        <p className="mb-1 text-[11px] uppercase tracking-[0.2em] text-orange-500/80">
-                          {message.sender === 'user' ? 'You' : visibleAvatar.name}
-                        </p>
-                        <p>{message.text}</p>
-                      </div>
-                    ))}
-                  </div>
+            {showTranscript && (
+              <div className="mt-5 rounded-[1.8rem] border border-orange-100 bg-white/88 p-4 xl:hidden">
+                <div className="mb-3 flex items-center gap-2 text-xs uppercase tracking-[0.24em] text-orange-600">
+                  <MessageSquareText className="h-3.5 w-3.5" />
+                  Transcript
                 </div>
-              )}
+                <div
+                  ref={mobileTranscriptRef}
+                  className="max-h-64 space-y-3 overflow-y-auto pr-1"
+                >
+                  {messages.map((message, index) => (
+                    <div
+                      key={`${message.sender}-${index}`}
+                      className={`rounded-2xl px-4 py-3 text-sm leading-relaxed shadow-sm ${
+                        message.sender === 'user'
+                          ? 'ml-8 bg-[#EEF9F7] text-slate-900'
+                          : 'mr-8 bg-white text-slate-900'
+                      }`}
+                    >
+                      <p className="mb-1 text-[11px] uppercase tracking-[0.2em] text-orange-500/80">
+                        {message.sender === 'user' ? 'You' : visibleAvatar.name}
+                      </p>
+                      <p>{message.text}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
-              {(actionError || error || audioError) && (
-                <div className="space-y-3">
-                  {actionError && <ErrorMessage message={actionError} />}
-                  {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
-                  {audioError && <ErrorMessage message={audioError} onRetry={() => setAudioError(null)} />}
-                </div>
-              )}
-            </div>
+            {(actionError || error || audioError) && (
+              <div className="mt-5 space-y-3">
+                {actionError && <ErrorMessage message={actionError} />}
+                {error && <ErrorMessage message={error} onRetry={() => setError(null)} />}
+                {audioError && <ErrorMessage message={audioError} onRetry={() => setAudioError(null)} />}
+              </div>
+            )}
           </div>
         </section>
 
-        <aside className="hidden h-full flex-col rounded-[2rem] border border-orange-100 bg-white p-5 shadow-sm xl:flex">
+        <aside className="hidden rounded-[2rem] border border-orange-100 bg-white p-5 shadow-sm xl:flex xl:h-[calc(100vh-4rem)] xl:flex-col xl:overflow-hidden">
           <div className="flex items-center justify-between gap-3 border-b border-orange-100 pb-4">
             <div>
               <p className="text-xs uppercase tracking-[0.25em] text-orange-500">Transcript</p>
@@ -680,7 +707,10 @@ export function ConversationScreenNew({
             <Volume2 className="h-5 w-5 text-gray-400" />
           </div>
 
-          <div className="mt-5 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+          <div
+            ref={desktopTranscriptRef}
+            className="mt-5 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1"
+          >
             {isLoadingHistory && (
               <div className="flex h-full items-center justify-center">
                 <LoadingSpinner text="Loading conversation..." />
@@ -693,8 +723,8 @@ export function ConversationScreenNew({
                   key={`${message.sender}-${index}`}
                   className={`rounded-2xl px-4 py-3 shadow-sm ${
                     message.sender === 'user'
-                      ? 'ml-8 bg-[#EEF9F7] text-gray-900'
-                      : 'mr-8 bg-orange-50 text-gray-900'
+                      ? 'ml-8 bg-[#EEF9F7] text-slate-900'
+                      : 'mr-8 bg-orange-50 text-slate-900'
                   }`}
                 >
                   <p className="mb-1 text-[11px] uppercase tracking-[0.22em] text-gray-400">
