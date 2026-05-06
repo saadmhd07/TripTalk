@@ -51,11 +51,15 @@ function AnimatedAvatar({
 }: AnimatedAvatarProps) {
   const isSpeaking = characterState === 'speaking';
   const isListening = recorderState === 'recording';
+  const stageClass =
+    visibleAvatar.avatarId === 'oficial-ramirez'
+      ? 'bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.98),rgba(220,232,242,0.96)_52%,rgba(191,207,220,0.9)_100%)]'
+      : 'bg-gradient-to-b from-white/18 to-white/5';
 
   return (
     <div className={`mx-auto w-fit rounded-full p-4 transition-all duration-300 ${avatarGlowClass}`}>
       <div
-        className={`relative flex h-56 w-56 items-center justify-center overflow-hidden rounded-full border border-white/15 bg-gradient-to-b from-white/18 to-white/5 transition-all duration-300 sm:h-72 sm:w-72 ${portraitMotionClass}`}
+        className={`relative flex h-56 w-56 items-center justify-center overflow-hidden rounded-full border border-white/70 transition-all duration-300 sm:h-72 sm:w-72 ${stageClass} ${portraitMotionClass}`}
       >
         {visibleAvatar.imageUrl ? (
           <>
@@ -399,6 +403,18 @@ export function ConversationScreenNew({
       : characterState === 'thinking'
       ? 'translate-y-0 scale-[1.005]'
       : 'translate-y-0 scale-100';
+  const activeStatusCopy =
+    recorderState === 'recording'
+      ? 'Listening... tap to stop'
+      : recorderState === 'transcribing'
+      ? 'Transcribing...'
+      : isSending
+      ? 'Sending your answer...'
+      : characterState === 'speaking'
+      ? `${visibleAvatar.name} is speaking`
+      : characterState === 'thinking'
+      ? 'Thinking...'
+      : null;
 
   return (
     <div className="mx-auto min-h-[calc(100vh-4rem)] max-w-7xl">
@@ -455,8 +471,8 @@ export function ConversationScreenNew({
                 </div>
               </div>
 
-              <div className="w-full max-w-sm rounded-[2rem] border border-orange-200 bg-white/88 p-4 shadow-sm">
-                <p className="text-xs uppercase tracking-[0.24em] text-orange-600">Key outcome</p>
+              <div className="w-full max-w-sm rounded-[2rem] border border-orange-100 bg-white/78 p-4 shadow-sm">
+                <p className="text-xs uppercase tracking-[0.24em] text-slate-500">After this checkpoint</p>
                 <p className="mt-2 text-sm leading-relaxed text-slate-600">
                   Finish the checkpoint, then review how natural and credible your answers sounded.
                 </p>
@@ -464,10 +480,10 @@ export function ConversationScreenNew({
                   type="button"
                   onClick={onFeedback}
                   disabled={isCompletingSession}
-                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[1.3rem] bg-gradient-to-r from-orange-500 to-rose-500 px-5 py-4 text-base font-semibold text-white shadow-[0_18px_40px_rgba(249,115,22,0.26)] transition hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-[1.3rem] border border-orange-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-orange-300 hover:bg-orange-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <Sparkles className="h-5 w-5" />
-                  {isCompletingSession ? 'Closing session...' : 'Finish and get feedback'}
+                  {isCompletingSession ? 'Closing session...' : 'Finish and open feedback'}
                 </button>
               </div>
             </header>
@@ -492,22 +508,36 @@ export function ConversationScreenNew({
                   </div>
 
                   <div className="mx-auto mt-8 max-w-xl rounded-[1.8rem] border border-orange-100 bg-[#FFF8F2] px-6 py-5 text-left shadow-inner">
-                    <p className="text-[11px] uppercase tracking-[0.24em] text-orange-600">
-                      {visibleAvatar.name} just said
-                    </p>
-                    <p className="mt-3 text-lg leading-relaxed text-slate-900">
+                    <p className="text-lg leading-relaxed text-slate-900">
                       {lastAvatarMessage?.text ?? introMessage ?? focusCopy.objective}
                     </p>
+                    {vocabularyHints && vocabularyHints.length > 0 && (
+                      <div className="mt-4 flex flex-wrap gap-2">
+                        {vocabularyHints.slice(0, 4).map((hint) => (
+                          <span
+                            key={hint}
+                            className="rounded-full border border-orange-200 bg-white px-3 py-1 text-xs font-medium text-orange-700"
+                          >
+                            {hint}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
 
               <div className="space-y-5">
                 <div className="rounded-[2rem] border border-orange-100 bg-white/88 p-5 text-center shadow-sm">
-                  <p className="text-sm uppercase tracking-[0.24em] text-orange-600">Live status</p>
-                  <h2 className="mt-3 text-2xl font-semibold text-slate-900">{statusLabel}</h2>
+                  <div className="flex min-h-7 items-center justify-center">
+                    {activeStatusCopy ? (
+                      <p className="text-sm font-medium text-slate-700">{activeStatusCopy}</p>
+                    ) : (
+                      <p className="text-sm text-slate-400"> </p>
+                    )}
+                  </div>
 
-                  <div className="mt-5 flex items-end justify-center gap-2">
+                  <div className="mt-3 flex items-end justify-center gap-2">
                     {waveformHeights.map((height, index) => (
                       <div
                         key={index}
@@ -548,11 +578,7 @@ export function ConversationScreenNew({
                   </button>
 
                   <p className="mt-4 text-base font-medium text-slate-700">
-                    {recorderState === 'recording'
-                      ? 'Tap to stop recording'
-                      : recorderState === 'transcribing'
-                      ? 'Transcribing your answer...'
-                      : 'Speak first'}
+                    {recorderState === 'recording' ? 'Stop recording' : 'Speak first'}
                   </p>
                   <p className="mt-2 text-sm text-slate-500">{focusCopy.pressure}</p>
                 </div>
@@ -569,20 +595,9 @@ export function ConversationScreenNew({
                         }
                       }}
                       placeholder="Type your answer if you prefer, or use the mic..."
-                      rows={5}
+                      rows={6}
                       className="w-full resize-none rounded-[1.4rem] border border-orange-100 bg-[#FFF8F2] px-5 py-4 text-base text-slate-900 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-200/60"
                     />
-
-                    <div className="flex flex-wrap gap-2">
-                      {vocabularyHints?.slice(0, 3).map((hint) => (
-                        <span
-                          key={hint}
-                          className="rounded-full border border-orange-200 bg-orange-50 px-3 py-1 text-xs font-medium text-orange-700"
-                        >
-                          {hint}
-                        </span>
-                      ))}
-                    </div>
 
                     <div className="space-y-3">
                       {lastSpokenText && (
@@ -665,7 +680,7 @@ export function ConversationScreenNew({
             <Volume2 className="h-5 w-5 text-gray-400" />
           </div>
 
-          <div className="mt-5 flex-1 space-y-4 overflow-y-auto pr-1">
+          <div className="mt-5 min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
             {isLoadingHistory && (
               <div className="flex h-full items-center justify-center">
                 <LoadingSpinner text="Loading conversation..." />
