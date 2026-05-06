@@ -11,6 +11,7 @@ from app.schemas.conversation_session import (
     ConversationSessionRead,
     ConversationSessionStatus,
 )
+from app.schemas.message import MessageRole
 
 router = APIRouter()
 conversation_repository = ConversationRepository()
@@ -39,6 +40,13 @@ def create_conversation_session(
         scenario_id=scenario.id,
         level_at_start=payload.level_at_start,
     )
+    if scenario.intro_message:
+        conversation_repository.create_message(
+            db,
+            session_id=session.id,
+            role=MessageRole.ASSISTANT.value,
+            content=scenario.intro_message,
+        )
     db.commit()
 
     return ConversationSessionRead(

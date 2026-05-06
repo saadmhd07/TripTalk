@@ -133,3 +133,44 @@ def test_complete_session_updates_history_status() -> None:
     assert len(data) == 1
     assert data[0]["status"] == "completed"
     assert data[0]["ended_at"] is not None
+
+
+def test_create_session_persists_intro_message() -> None:
+    scenario_id: int
+
+    with TestingSessionLocal() as db:
+        country = Country(code="CL", name="Chile", language="es", is_active=True)
+        db.add(country)
+        db.flush()
+
+        scenario = Scenario(
+            country_id=country.id,
+            slug="immigration-santiago",
+            title="Contrôle d'immigration à Santiago",
+            description="Scenario test",
+            language_code="es",
+            difficulty="beginner",
+            mode="guided",
+            intro_message="Buenos días. Su pasaporte, por favor.",
+            system_prompt="Test prompt",
+            is_active=True,
+        )
+        db.add(scenario)
+        db.commit()
+        scenario_id = scenario.id
+
+    client = TestClient(app)
+
+    session_response = client.post(
+        "/api/v1/conversation-sessions",
+        json={"scenario_id": scenario_id, "level_at_start": "Débutant"},
+    )
+    assert session_response.status_code == 200
+    session_id = session_response.json()["id"]
+
+    messages_response = client.get(f"/api/v1/conversation-sessions/{session_id}/messages")
+    assert messages_response.status_code == 200
+    data = messages_response.json()
+    assert len(data) == 1
+    assert data[0]["role"] == "assistant"
+    assert data[0]["content"] == "Buenos días. Su pasaporte, por favor."

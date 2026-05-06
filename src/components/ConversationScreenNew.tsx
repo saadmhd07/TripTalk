@@ -140,6 +140,7 @@ export function ConversationScreenNew({
   const audioUrlRef = useRef<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const recordedChunksRef = useRef<Blob[]>([]);
+  const hasAutoPlayedInitialMessageRef = useRef(false);
 
   const visibleAvatar = getConversationAvatarPresentation(
     country,
@@ -162,14 +163,25 @@ export function ConversationScreenNew({
         if (!ignore) {
           if (data.length === 0 && introMessage) {
             setMessages([{ sender: 'avatar', text: introMessage }]);
-            void playAvatarSpeech(introMessage);
+            if (!hasAutoPlayedInitialMessageRef.current) {
+              hasAutoPlayedInitialMessageRef.current = true;
+              void playAvatarSpeech(introMessage);
+            }
           } else {
-            setMessages(
-              data.map((message) => ({
-                sender: message.role === 'user' ? 'user' : 'avatar',
-                text: message.content,
-              }))
-            );
+            const mappedMessages = data.map((message) => ({
+              sender: message.role === 'user' ? 'user' : 'avatar',
+              text: message.content,
+            }));
+            setMessages(mappedMessages);
+
+            if (
+              data.length === 1 &&
+              data[0].role === 'assistant' &&
+              !hasAutoPlayedInitialMessageRef.current
+            ) {
+              hasAutoPlayedInitialMessageRef.current = true;
+              void playAvatarSpeech(data[0].content);
+            }
           }
         }
       } catch (err) {
