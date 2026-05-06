@@ -1,6 +1,7 @@
 import { apiFetch } from './api';
 import { ErrorMessages, parseApiError, parseNetworkError, formatErrorMessage } from './errors';
 import type {
+  ConversationSessionDetailApiResponse,
   ConversationSessionHistoryApiResponse,
   CountryApiItem,
   FeedbackApiResponse,
@@ -67,6 +68,16 @@ export async function completeConversationSession(
   });
   if (!response.ok) {
     throw new Error('Failed to complete conversation session');
+  }
+  return response.json();
+}
+
+export async function fetchConversationSession(
+  sessionId: string
+): Promise<ConversationSessionDetailApiResponse> {
+  const response = await apiFetch(`/conversation-sessions/${sessionId}`);
+  if (!response.ok) {
+    throw new Error('Failed to load conversation session');
   }
   return response.json();
 }

@@ -43,3 +43,22 @@ class ConversationSessionHistoryRead(BaseModel):
     has_feedback: bool
     started_at: datetime
     ended_at: datetime | None = None
+
+
+class ConversationSessionDetailRead(BaseModel):
+    id: str
+    scenario_id: int
+    scenario_title: str
+    country_name: str
+    country_code: str
+    language_code: str
+    mode: str
+    status: ConversationSessionStatus
+    level_at_start: str | None = None
+    intro_message: str | None = None
+    cultural_tip: str | None = None
+    vocabulary_hints: str | None = None
+    partner_name: str | None = None
+    partner_role: str | None = None
+    started_at: datetime
+    ended_at: datetime | None = None
