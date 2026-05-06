@@ -7,6 +7,7 @@ from app.repositories.scenario_repository import ScenarioRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.conversation_session import (
     ConversationSessionCreate,
+    ConversationSessionDetailRead,
     ConversationSessionHistoryRead,
     ConversationSessionRead,
     ConversationSessionStatus,
@@ -102,21 +103,34 @@ def list_my_conversation_sessions(
     return items
 
 
-@router.get("/conversation-sessions/{session_id}", response_model=ConversationSessionRead)
+@router.get("/conversation-sessions/{session_id}", response_model=ConversationSessionDetailRead)
 def get_conversation_session(
     session_id: str,
     user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_db_session),
-) -> ConversationSessionRead:
+) -> ConversationSessionDetailRead:
     session = conversation_repository.get_session_for_user(db, session_id=session_id, user_id=user_id)
     if session is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
 
-    return ConversationSessionRead(
+    scenario = session.scenario
+    country = scenario.country if scenario else None
+
+    return ConversationSessionDetailRead(
         id=session.id,
         scenario_id=session.scenario_id,
+        scenario_title=scenario.title if scenario else "Unknown scenario",
+        country_name=country.name if country else "Unknown country",
+        country_code=country.code if country else "",
+        language_code=scenario.language_code if scenario else "",
+        mode=scenario.mode if scenario else "guided",
         status=ConversationSessionStatus(session.status),
         level_at_start=session.level_at_start,
+        intro_message=scenario.intro_message if scenario else None,
+        cultural_tip=scenario.cultural_tip if scenario else None,
+        vocabulary_hints=scenario.vocabulary_hints if scenario else None,
+        partner_name=scenario.partner_name if scenario else None,
+        partner_role=scenario.partner_role if scenario else None,
         started_at=session.started_at,
         ended_at=session.ended_at,
     )

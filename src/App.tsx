@@ -11,6 +11,7 @@ import { ProfileScreen } from './components/ProfileScreen';
 import {
   completeConversationSession,
   createConversationSession,
+  fetchConversationSession,
   fetchMyConversationHistory,
   fetchMyLanguageLevel,
   fetchMyProfile,
@@ -27,8 +28,59 @@ import type {
   UserProfileApiResponse,
 } from './lib/types';
 
+type AppRoute = {
+  screen: Screen;
+  sessionId: string | null;
+};
+
+function parseAppRoute(pathname: string): AppRoute {
+  const normalized = pathname.replace(/\/+$/, '') || '/';
+
+  if (normalized === '/history') {
+    return { screen: 'history', sessionId: null };
+  }
+
+  if (normalized === '/profile') {
+    return { screen: 'profile', sessionId: null };
+  }
+
+  if (normalized.startsWith('/conversation/')) {
+    return {
+      screen: 'conversation',
+      sessionId: decodeURIComponent(normalized.replace('/conversation/', '')),
+    };
+  }
+
+  if (normalized.startsWith('/feedback/')) {
+    return {
+      screen: 'feedback',
+      sessionId: decodeURIComponent(normalized.replace('/feedback/', '')),
+    };
+  }
+
+  return { screen: 'explorer', sessionId: null };
+}
+
+function buildPathForRoute(route: AppRoute): string {
+  switch (route.screen) {
+    case 'history':
+      return '/history';
+    case 'profile':
+      return '/profile';
+    case 'conversation':
+      return route.sessionId ? `/conversation/${encodeURIComponent(route.sessionId)}` : '/explorer';
+    case 'feedback':
+      return route.sessionId ? `/feedback/${encodeURIComponent(route.sessionId)}` : '/explorer';
+    case 'explorer':
+    default:
+      return '/explorer';
+  }
+}
+
 export default function App() {
-  const [currentScreen, setCurrentScreen] = useState<Screen>('explorer');
+  const [route, setRoute] = useState<AppRoute>(() =>
+    typeof window === 'undefined' ? { screen: 'explorer', sessionId: null } : parseAppRoute(window.location.pathname)
+  );
   const [selectedLevel, setSelectedLevel] = useState<Level>(null);
   const [selectedCountry, setSelectedCountry] = useState<Country>(null);
   const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
@@ -45,6 +97,10 @@ export default function App() {
   const [historyLoading, setHistoryLoading] = useState(false);
   const [historyError, setHistoryError] = useState<string | null>(null);
   const [isCompletingSession, setIsCompletingSession] = useState(false);
+  const [isHydratingRoute, setIsHydratingRoute] = useState(false);
+
+  const currentScreen = route.screen;
+  const activeSessionId = route.sessionId ?? sessionId;
 
   function parseVocabularyHints(raw: string | null | undefined): string[] | null {
     if (!raw) {
@@ -59,8 +115,20 @@ export default function App() {
     }
   }
 
+  function navigateTo(nextRoute: AppRoute, options?: { replace?: boolean }) {
+    const nextPath = buildPathForRoute(nextRoute);
+
+    if (typeof window !== 'undefined') {
+      const method = options?.replace ? 'replaceState' : 'pushState';
+      if (window.location.pathname !== nextPath) {
+        window.history[method](null, '', nextPath);
+      }
+    }
+
+    setRoute(nextRoute);
+  }
+
   function resetFlowState() {
-    setCurrentScreen('explorer');
     setSelectedLevel(null);
     setSelectedCountry(null);
     setSelectedCountryId(null);
@@ -75,6 +143,8 @@ export default function App() {
     setHistoryLoading(false);
     setHistoryError(null);
     setIsCompletingSession(false);
+    setIsHydratingRoute(false);
+    navigateTo({ screen: 'explorer', sessionId: null }, { replace: true });
   }
 
   function getActiveSection(): 'explorer' | 'history' | 'profile' | 'conversation' {
@@ -92,6 +162,18 @@ export default function App() {
 
     return 'explorer';
   }
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setRoute(parseAppRoute(window.location.pathname));
+    };
+
+    window.addEventListener('popstate', handlePopState);
+
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+    };
+  }, []);
 
   useEffect(() => {
     if (!supabase) {
@@ -155,6 +237,93 @@ export default function App() {
     };
   }, [session]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    if (window.location.pathname === '/' && authReady && (!isSupabaseConfigured || session)) {
+      navigateTo({ screen: 'explorer', sessionId: null }, { replace: true });
+    }
+  }, [authReady, session]);
+
+  useEffect(() => {
+    if (currentScreen === 'history') {
+      void loadHistory();
+    }
+  }, [currentScreen]);
+
+  useEffect(() => {
+    if (currentScreen !== 'conversation' && currentScreen !== 'feedback') {
+      setIsHydratingRoute(false);
+      return;
+    }
+
+    if (!route.sessionId) {
+      navigateTo({ screen: 'explorer', sessionId: null }, { replace: true });
+      return;
+    }
+
+    if (sessionId === route.sessionId && selectedScenario && selectedCountry) {
+      setIsHydratingRoute(false);
+      return;
+    }
+
+    let ignore = false;
+
+    async function hydrateSessionRoute() {
+      setIsHydratingRoute(true);
+      setProfileError(null);
+
+      try {
+        const detail = await fetchConversationSession(route.sessionId!);
+        if (ignore) {
+          return;
+        }
+
+        setSessionId(detail.id);
+        setSelectedCountry(detail.country_name);
+        setSelectedCountryId(null);
+        setSelectedScenario({
+          id: detail.scenario_id,
+          slug: '',
+          title: detail.scenario_title,
+          description: '',
+          language_code: detail.language_code,
+          mode: detail.mode,
+          intro_message: detail.intro_message,
+          cultural_tip: detail.cultural_tip,
+          vocabulary_hints: detail.vocabulary_hints,
+          partner_name: detail.partner_name,
+          partner_role: detail.partner_role,
+        });
+
+        if (
+          detail.level_at_start === 'Débutant' ||
+          detail.level_at_start === 'Intermédiaire' ||
+          detail.level_at_start === 'Avancé'
+        ) {
+          setSelectedLevel(detail.level_at_start);
+        }
+      } catch {
+        if (!ignore) {
+          setProfileError("Impossible de charger la session demandée.");
+          navigateTo({ screen: 'explorer', sessionId: null }, { replace: true });
+        }
+      } finally {
+        if (!ignore) {
+          setIsHydratingRoute(false);
+        }
+      }
+    }
+
+    void hydrateSessionRoute();
+
+    return () => {
+      ignore = true;
+    };
+  }, [currentScreen, route.sessionId, sessionId, selectedScenario, selectedCountry]);
+
   async function loadHistory() {
     setHistoryLoading(true);
     setHistoryError(null);
@@ -188,7 +357,7 @@ export default function App() {
       await updateMyLanguageLevel(selectedScenario.language_code, selectedLevel);
       const createdSession = await createConversationSession(selectedScenario.id, selectedLevel);
       setSessionId(createdSession.id);
-      setCurrentScreen('conversation');
+      navigateTo({ screen: 'conversation', sessionId: createdSession.id });
     } catch {
       setProfileError("Impossible d'enregistrer le niveau pour cette langue.");
     } finally {
@@ -239,25 +408,24 @@ export default function App() {
   }
 
   function openHistory() {
-    void loadHistory();
-    setCurrentScreen('history');
+    navigateTo({ screen: 'history', sessionId: null });
   }
 
   function openProfile() {
-    setCurrentScreen('profile');
+    navigateTo({ screen: 'profile', sessionId: null });
   }
 
   function openExplorer() {
-    setCurrentScreen('explorer');
+    navigateTo({ screen: 'explorer', sessionId: null });
   }
 
   function openConversation() {
     if (sessionId && selectedScenario) {
-      setCurrentScreen('conversation');
+      navigateTo({ screen: 'conversation', sessionId });
       return;
     }
 
-    setCurrentScreen('explorer');
+    navigateTo({ screen: 'explorer', sessionId: null });
   }
 
   function startNewConversation() {
@@ -268,7 +436,7 @@ export default function App() {
     setSessionId(null);
     setProfileError(null);
     setIsCompletingSession(false);
-    setCurrentScreen('explorer');
+    navigateTo({ screen: 'explorer', sessionId: null });
   }
 
   async function handleOpenFeedback() {
@@ -281,7 +449,7 @@ export default function App() {
       setIsCompletingSession(true);
       setProfileError(null);
       await completeConversationSession(sessionId);
-      setCurrentScreen('feedback');
+      navigateTo({ screen: 'feedback', sessionId });
     } catch {
       setProfileError("Impossible de terminer la session pour générer le feedback.");
     } finally {
@@ -305,7 +473,7 @@ export default function App() {
       partner_role: item.partner_role,
     });
     setSessionId(item.id);
-    setCurrentScreen('conversation');
+    navigateTo({ screen: 'conversation', sessionId: item.id });
   }
 
   function handleOpenFeedbackFromHistory(item: ConversationSessionHistoryApiResponse) {
@@ -324,7 +492,7 @@ export default function App() {
       partner_role: item.partner_role,
     });
     setSessionId(item.id);
-    setCurrentScreen('feedback');
+    navigateTo({ screen: 'feedback', sessionId: item.id });
   }
 
   if (!authReady) {
@@ -359,13 +527,18 @@ export default function App() {
         onSignOut={() => void handleSignOut()}
       />
       <main className="ml-60 flex-1 p-8">
+      {isHydratingRoute && (currentScreen === 'conversation' || currentScreen === 'feedback') && (
+        <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center">
+          <div className="text-gray-500">Chargement de la session...</div>
+        </div>
+      )}
       {currentScreen === 'profile' && (
         <ProfileScreen
           profile={profile}
           onProfileUpdated={setProfile}
         />
       )}
-      {currentScreen === 'explorer' && (
+      {currentScreen === 'explorer' && !isHydratingRoute && (
         <ExplorerScreen
           selectedCountry={selectedCountry}
           selectedCountryId={selectedCountryId}
@@ -380,7 +553,7 @@ export default function App() {
           onStartConversation={() => void handleStartConversation()}
         />
       )}
-      {currentScreen === 'history' && (
+      {currentScreen === 'history' && !isHydratingRoute && (
         <HistoryScreen
           items={historyItems}
           isLoading={historyLoading}
@@ -391,13 +564,13 @@ export default function App() {
           onStartNew={startNewConversation}
         />
       )}
-      {currentScreen === 'conversation' && (
+      {currentScreen === 'conversation' && !isHydratingRoute && selectedCountry && selectedScenario && activeSessionId && (
         <ConversationScreen 
-          country={selectedCountry!}
-          scenarioSlug={selectedScenario!.slug}
-          scenario={selectedScenario!.title}
+          country={selectedCountry}
+          scenarioSlug={selectedScenario.slug}
+          scenario={selectedScenario.title}
           scenarioDescription={selectedScenario?.description}
-          sessionId={sessionId!}
+          sessionId={activeSessionId}
           languageCode={selectedScenario?.language_code}
           mode={selectedScenario?.mode}
           introMessage={selectedScenario?.intro_message}
@@ -411,10 +584,10 @@ export default function App() {
           isCompletingSession={isCompletingSession}
         />
       )}
-      {currentScreen === 'feedback' && (
+      {currentScreen === 'feedback' && !isHydratingRoute && activeSessionId && (
         <FeedbackScreen 
-          sessionId={sessionId!}
-          onRetry={() => setCurrentScreen('conversation')}
+          sessionId={activeSessionId}
+          onRetry={() => navigateTo({ screen: 'conversation', sessionId: activeSessionId })}
           onNewScenario={openExplorer}
           onChangeCountry={startNewConversation}
         />

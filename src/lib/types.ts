@@ -90,6 +90,25 @@ export interface ConversationSessionHistoryApiResponse {
   ended_at: string | null;
 }
 
+export interface ConversationSessionDetailApiResponse {
+  id: string;
+  scenario_id: number;
+  scenario_title: string;
+  country_name: string;
+  country_code: string;
+  language_code: string;
+  mode: string;
+  status: 'active' | 'completed' | 'abandoned';
+  level_at_start: string | null;
+  intro_message: string | null;
+  cultural_tip: string | null;
+  vocabulary_hints: string | null;
+  partner_name: string | null;
+  partner_role: string | null;
+  started_at: string;
+  ended_at: string | null;
+}
+
 export interface UserProfileApiResponse {
   id: string;
   email: string | null;

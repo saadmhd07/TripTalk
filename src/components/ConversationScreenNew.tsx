@@ -161,6 +161,28 @@ export function ConversationScreenNew({
     [messages]
   );
 
+  function hasAutoPlayedInitialMessage() {
+    if (hasAutoPlayedInitialMessageRef.current) {
+      return true;
+    }
+
+    try {
+      return window.sessionStorage.getItem(`triptalk-initial-autoplay:${sessionId}`) === '1';
+    } catch {
+      return false;
+    }
+  }
+
+  function markInitialMessageAutoPlayed() {
+    hasAutoPlayedInitialMessageRef.current = true;
+
+    try {
+      window.sessionStorage.setItem(`triptalk-initial-autoplay:${sessionId}`, '1');
+    } catch {
+      // Ignore sessionStorage failures and keep the in-memory guard.
+    }
+  }
+
   useEffect(() => {
     let ignore = false;
 
@@ -170,8 +192,8 @@ export function ConversationScreenNew({
         if (!ignore) {
           if (data.length === 0 && introMessage) {
             setMessages([{ sender: 'avatar', text: introMessage }]);
-            if (!hasAutoPlayedInitialMessageRef.current) {
-              hasAutoPlayedInitialMessageRef.current = true;
+            if (!hasAutoPlayedInitialMessage()) {
+              markInitialMessageAutoPlayed();
               void playAvatarSpeech(introMessage);
             }
           } else {
@@ -180,13 +202,17 @@ export function ConversationScreenNew({
               text: message.content,
             }));
             setMessages(mappedMessages);
+            const lastAssistantMessage = [...data]
+              .reverse()
+              .find((message) => message.role === 'assistant');
+            setLastSpokenText(lastAssistantMessage?.content ?? null);
 
             if (
               data.length === 1 &&
               data[0].role === 'assistant' &&
-              !hasAutoPlayedInitialMessageRef.current
+              !hasAutoPlayedInitialMessage()
             ) {
-              hasAutoPlayedInitialMessageRef.current = true;
+              markInitialMessageAutoPlayed();
               void playAvatarSpeech(data[0].content);
             }
           }
@@ -570,8 +596,8 @@ export function ConversationScreenNew({
                       </p>
                     )}
 
-                    <div className="flex items-center justify-center gap-4">
-                      {lastSpokenText && (
+                    <div className="grid grid-cols-[56px_96px_56px] items-center justify-center gap-4">
+                      {lastSpokenText ? (
                         <button
                           type="button"
                           onClick={() => void playAvatarSpeech(lastSpokenText)}
@@ -580,6 +606,8 @@ export function ConversationScreenNew({
                         >
                           <Play className="h-5 w-5" />
                         </button>
+                      ) : (
+                        <div aria-hidden="true" className="h-14 w-14" />
                       )}
 
                       <button
