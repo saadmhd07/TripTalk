@@ -3,7 +3,6 @@ from typing import Any
 from fastapi import Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.core.database import get_db
 from app.core.security import decode_supabase_token
 
@@ -14,9 +13,6 @@ DbSession = Session
 def get_current_user_claims(
     authorization: str | None = Header(default=None),
 ) -> dict[str, Any]:
-    if not authorization and settings.dev_mode:
-        return {"sub": "dev-user", "email": settings.dev_user_email}
-
     if not authorization:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing auth header")
 
