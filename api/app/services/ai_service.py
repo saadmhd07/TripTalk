@@ -38,6 +38,8 @@ class AIService:
         self.client = OpenAI(api_key=settings.openai_api_key) if settings.openai_api_key else None
         self.chat_model = settings.effective_openai_chat_model
         self.feedback_model = settings.effective_openai_feedback_model
+        self.chat_reasoning_effort = settings.effective_openai_chat_reasoning_effort
+        self.feedback_reasoning_effort = settings.effective_openai_feedback_reasoning_effort
         self.tts_provider = settings.tts_provider.lower()
         self.tts_model = settings.openai_tts_model
         self.stt_model = settings.openai_stt_model
@@ -90,11 +92,17 @@ class AIService:
         ]
 
         try:
+            request_kwargs = {
+                "model": self.chat_model,
+                "messages": messages,
+                "response_format": {"type": "json_object"},
+                "timeout": 30.0,
+            }
+            if self.chat_reasoning_effort is not None:
+                request_kwargs["reasoning_effort"] = self.chat_reasoning_effort
+
             response = self.client.chat.completions.create(
-                model=self.chat_model,
-                messages=messages,
-                response_format={"type": "json_object"},
-                timeout=30.0,
+                **request_kwargs,
             )
 
             tokens_used = response.usage.total_tokens if response.usage else None
@@ -166,9 +174,9 @@ class AIService:
             )
 
         try:
-            response = self.client.chat.completions.create(
-                model=self.feedback_model,
-                messages=[
+            request_kwargs = {
+                "model": self.feedback_model,
+                "messages": [
                     {
                         "role": "system",
                         "content": feedback_system_prompt,
@@ -183,8 +191,12 @@ class AIService:
                         ),
                     },
                 ],
-                timeout=30.0,
-            )
+                "timeout": 30.0,
+            }
+            if self.feedback_reasoning_effort is not None:
+                request_kwargs["reasoning_effort"] = self.feedback_reasoning_effort
+
+            response = self.client.chat.completions.create(**request_kwargs)
 
             tokens_used = response.usage.total_tokens if response.usage else None
             log_openai_call(logger, "feedback_generation", self.feedback_model, tokens=tokens_used)
