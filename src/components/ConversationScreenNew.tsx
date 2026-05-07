@@ -357,7 +357,7 @@ export function ConversationScreenNew({
 
         try {
           const transcript = await transcribeConversationAudio(sessionId, audioBlob, languageCode);
-          setDraft(transcript);
+          await sendMessageContent(transcript, { restoreDraftOnError: true });
         } catch {
           setError('Voice transcription is unavailable right now.');
         } finally {
@@ -382,10 +382,9 @@ export function ConversationScreenNew({
     }
   }
 
-  async function handleSendMessage(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const content = draft.trim();
-    if (!content || isSending || isCheckpointComplete) {
+  async function sendMessageContent(content: string, options?: { restoreDraftOnError?: boolean }) {
+    const trimmedContent = content.trim();
+    if (!trimmedContent || isSending || isCheckpointComplete) {
       return;
     }
 
@@ -395,7 +394,7 @@ export function ConversationScreenNew({
     setCharacterState('thinking');
 
     try {
-      const exchange = await sendConversationMessage(sessionId, content);
+      const exchange = await sendConversationMessage(sessionId, trimmedContent);
       const assistantReply = exchange.messages.find((message) => message.role === 'assistant');
       const nextMessages = [
         ...messages,
@@ -421,10 +420,19 @@ export function ConversationScreenNew({
       const message =
         err instanceof Error ? err.message : 'Failed to send message. Please try again.';
       setError(message);
+      if (options?.restoreDraftOnError) {
+        setDraft(trimmedContent);
+        setShowTextFallback(true);
+      }
       setCharacterState('idle');
     } finally {
       setIsSending(false);
     }
+  }
+
+  async function handleSendMessage(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    await sendMessageContent(draft);
   }
 
   const avatarGlowClass =
@@ -665,18 +673,35 @@ export function ConversationScreenNew({
 
                           <button
                             type="button"
-                            onClick={
-                              recorderState === 'recording'
-                                ? stopVoiceRecording
-                                : () => void startVoiceRecording()
-                            }
+                            onPointerDown={(event) => {
+                              event.preventDefault();
+                              if (recorderState === 'idle') {
+                                void startVoiceRecording();
+                              }
+                            }}
+                            onPointerUp={(event) => {
+                              event.preventDefault();
+                              if (recorderState === 'recording') {
+                                stopVoiceRecording();
+                              }
+                            }}
+                            onPointerLeave={() => {
+                              if (recorderState === 'recording') {
+                                stopVoiceRecording();
+                              }
+                            }}
+                            onPointerCancel={() => {
+                              if (recorderState === 'recording') {
+                                stopVoiceRecording();
+                              }
+                            }}
                             disabled={recorderState === 'transcribing' || isSending}
                             className={`flex h-24 w-24 items-center justify-center rounded-full border-8 text-white shadow-[0_20px_45px_rgba(249,115,22,0.3)] transition disabled:cursor-not-allowed disabled:opacity-50 ${
                               recorderState === 'recording'
                                 ? 'border-red-200 bg-red-500 hover:bg-red-600'
                                 : 'border-orange-100 bg-gradient-to-br from-orange-500 to-orange-600 hover:scale-[1.02]'
                             }`}
-                            aria-label={recorderState === 'recording' ? 'Stop recording' : 'Start recording'}
+                            aria-label={recorderState === 'recording' ? 'Release to send voice message' : 'Hold to speak'}
                           >
                             {recorderState === 'recording' ? (
                               <Square className="h-8 w-8" />
