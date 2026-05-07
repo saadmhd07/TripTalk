@@ -154,6 +154,16 @@ export async function fetchSessionFeedback(sessionId: string): Promise<FeedbackA
   return response.json();
 }
 
+export async function regenerateSessionFeedback(sessionId: string): Promise<FeedbackApiResponse> {
+  const response = await apiFetch(`/conversation-sessions/${sessionId}/feedback/regenerate`, {
+    method: 'POST',
+  });
+  if (!response.ok) {
+    throw new Error('Failed to regenerate feedback');
+  }
+  return response.json();
+}
+
 export async function fetchMyConversationHistory(): Promise<ConversationSessionHistoryApiResponse[]> {
   const response = await apiFetch('/me/conversation-sessions');
   if (!response.ok) {

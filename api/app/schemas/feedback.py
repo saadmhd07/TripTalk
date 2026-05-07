@@ -6,10 +6,11 @@ from pydantic import BaseModel
 class FeedbackRead(BaseModel):
     id: int
     session_id: str
-    global_score: int
-    vocabulary_score: int | None = None
-    fluency_score: int | None = None
-    strengths: list[str] = []
-    improvements: list[str] = []
-    cultural_tip: str | None = None
+    readiness_score: int
+    situation_verdict: str
+    perceived_impression: str
+    key_moment: str
+    natural_response_tips: list[str] = []
+    cultural_code: str | None = None
+    next_step: str
     created_at: datetime
