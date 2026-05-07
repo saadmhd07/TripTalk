@@ -102,8 +102,6 @@ APP_ENV=development
 APP_DEBUG=true
 API_V1_PREFIX=/api/v1
 FRONTEND_URL=http://localhost:3000
-DEV_MODE=true
-DEV_USER_EMAIL=dev@triptalk.local
 
 DATABASE_URL=postgresql+psycopg://postgres:postgres@localhost:5432/triptalk
 
@@ -211,6 +209,7 @@ api/.venv/bin/pytest -q api/tests
 ## Notes
 
 - The backend verifies Supabase access tokens using Supabase JWKS.
+- The backend now requires a valid auth header for protected routes, including local development.
 - Guided conversations can complete automatically and then hand off to feedback.
 - Conversation and feedback URLs survive page reload.
 
