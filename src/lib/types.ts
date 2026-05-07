@@ -5,7 +5,6 @@ export type Screen =
   | 'conversation'
   | 'feedback';
 
-export type Level = 'Débutant' | 'Intermédiaire' | 'Avancé' | null;
 export type CountryName = string;
 export type Country = CountryName | null;
 
@@ -83,7 +82,6 @@ export interface ConversationSessionHistoryApiResponse {
   language_code: string;
   mode: string;
   status: 'active' | 'completed' | 'abandoned';
-  level_at_start: string | null;
   intro_message: string | null;
   cultural_tip: string | null;
   vocabulary_hints: string | null;
@@ -104,7 +102,6 @@ export interface ConversationSessionDetailApiResponse {
   language_code: string;
   mode: string;
   status: 'active' | 'completed' | 'abandoned';
-  level_at_start: string | null;
   intro_message: string | null;
   cultural_tip: string | null;
   vocabulary_hints: string | null;
@@ -119,20 +116,9 @@ export interface UserProfileApiResponse {
   email: string | null;
   display_name: string | null;
   native_language: string | null;
-  target_language: string | null;
-  level: string | null;
 }
 
 export interface UserProfileUpdatePayload {
   display_name?: string | null;
   native_language?: string | null;
-  target_language?: string | null;
-  level?: string | null;
-}
-
-export interface UserLanguageLevelApiResponse {
-  id: string;
-  user_id: string;
-  language_code: string;
-  level: string;
 }

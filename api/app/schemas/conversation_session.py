@@ -12,14 +12,12 @@ class ConversationSessionStatus(StrEnum):
 
 class ConversationSessionCreate(BaseModel):
     scenario_id: int
-    level_at_start: str | None = None
 
 
 class ConversationSessionRead(BaseModel):
     id: str
     scenario_id: int
     status: ConversationSessionStatus
-    level_at_start: str | None = None
     started_at: datetime
     ended_at: datetime | None = None
 
@@ -33,7 +31,6 @@ class ConversationSessionHistoryRead(BaseModel):
     language_code: str
     mode: str
     status: ConversationSessionStatus
-    level_at_start: str | None = None
     intro_message: str | None = None
     cultural_tip: str | None = None
     vocabulary_hints: str | None = None
@@ -54,7 +51,6 @@ class ConversationSessionDetailRead(BaseModel):
     language_code: str
     mode: str
     status: ConversationSessionStatus
-    level_at_start: str | None = None
     intro_message: str | None = None
     cultural_tip: str | None = None
     vocabulary_hints: str | None = None

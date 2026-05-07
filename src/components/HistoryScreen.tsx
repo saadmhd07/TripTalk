@@ -124,11 +124,6 @@ export function HistoryScreen({
                       <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
                         {getLanguageLabel(item.language_code)}
                       </span>
-                      {item.level_at_start && (
-                        <span className="rounded-full bg-white/20 px-3 py-1 text-xs font-medium text-white">
-                          {item.level_at_start}
-                        </span>
-                      )}
                     </div>
                   </div>
                 </div>

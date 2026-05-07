@@ -54,8 +54,6 @@ def test_get_me_creates_user_and_returns_empty_profile() -> None:
         "email": "profile@example.com",
         "display_name": None,
         "native_language": None,
-        "target_language": None,
-        "level": None,
     }
 
     with TestingSessionLocal() as db:
@@ -73,8 +71,6 @@ def test_patch_me_profile_persists_profile() -> None:
         json={
             "display_name": "Saad",
             "native_language": "fr",
-            "target_language": "es",
-            "level": "intermediate",
         },
     )
 
@@ -84,8 +80,6 @@ def test_patch_me_profile_persists_profile() -> None:
         "email": "profile@example.com",
         "display_name": "Saad",
         "native_language": "fr",
-        "target_language": "es",
-        "level": "intermediate",
     }
 
     with TestingSessionLocal() as db:
@@ -93,8 +87,6 @@ def test_patch_me_profile_persists_profile() -> None:
         assert profile is not None
         assert profile.display_name == "Saad"
         assert profile.native_language == "fr"
-        assert profile.target_language == "es"
-        assert profile.level == "intermediate"
 
 
 def test_get_me_returns_persisted_profile() -> None:
@@ -107,8 +99,6 @@ def test_get_me_returns_persisted_profile() -> None:
                 user_id=user.id,
                 display_name="Saad",
                 native_language="fr",
-                target_language="es",
-                level="advanced",
             )
         )
         db.commit()
@@ -122,6 +112,4 @@ def test_get_me_returns_persisted_profile() -> None:
         "email": "profile@example.com",
         "display_name": "Saad",
         "native_language": "fr",
-        "target_language": "es",
-        "level": "advanced",
     }

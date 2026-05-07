@@ -7,7 +7,7 @@ import {
   getScenarioPresentation,
 } from '../lib/presentation';
 import { fetchCountries, fetchCountryScenarios } from '../lib/triptalk-api';
-import type { CountryApiItem, Level, ScenarioApiItem, SelectedScenario } from '../lib/types';
+import type { CountryApiItem, ScenarioApiItem, SelectedScenario } from '../lib/types';
 import { LoadingSpinner } from './LoadingSpinner';
 import { ErrorMessage } from './ErrorMessage';
 
@@ -15,13 +15,10 @@ interface ExplorerScreenProps {
   selectedCountry: string | null;
   selectedCountryId: number | null;
   selectedScenario: SelectedScenario | null;
-  selectedLevel: Level;
   error: string | null;
-  isPreparingScenario: boolean;
   isStartingSession: boolean;
   onSelectCountry: (name: string, id: number) => void;
   onSelectScenario: (scenario: ScenarioApiItem) => Promise<void>;
-  onSelectLevel: (level: Level) => void;
   onStartConversation: () => void;
 }
 
@@ -29,13 +26,10 @@ export function ExplorerScreenNew({
   selectedCountry,
   selectedCountryId,
   selectedScenario,
-  selectedLevel,
   error,
-  isPreparingScenario,
   isStartingSession,
   onSelectCountry,
   onSelectScenario,
-  onSelectLevel,
   onStartConversation,
 }: ExplorerScreenProps) {
   const [countries, setCountries] = useState<CountryApiItem[]>([]);
@@ -144,8 +138,6 @@ export function ExplorerScreenNew({
     const filename = countryCodeToFilename[code] || code.toLowerCase();
     return `/images/countries/${filename}.jpg`;
   };
-
-  const levelOptions: Exclude<Level, null>[] = ['Débutant', 'Intermédiaire', 'Avancé'];
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -271,7 +263,7 @@ export function ExplorerScreenNew({
                 const presentation = getScenarioPresentation(scenario.slug);
                 const Icon = presentation.icon;
                 const isActive = selectedScenario?.id === scenario.id;
-                const isWorking = scenarioActionId === scenario.id && isPreparingScenario;
+                const isWorking = scenarioActionId === scenario.id;
                 const isFeatured = selectedCountry === 'Chile' && scenario.slug === 'aeroport-santiago';
 
                 return (
@@ -279,7 +271,7 @@ export function ExplorerScreenNew({
                     key={scenario.id}
                     type="button"
                     onClick={() => void handleScenarioPick(scenario)}
-                    disabled={isPreparingScenario}
+                    disabled={isStartingSession}
                     className={`rounded-2xl border-2 bg-white p-6 text-left transition-all ${
                       isActive
                         ? 'border-orange-500 shadow-lg'
@@ -307,7 +299,7 @@ export function ExplorerScreenNew({
                         </div>
                         <p className="text-sm text-gray-600">{scenario.description}</p>
                         {isWorking && (
-                          <p className="mt-3 text-sm text-gray-500">Loading session parameters...</p>
+                          <p className="mt-3 text-sm text-gray-500">Preparing this conversation...</p>
                         )}
                       </div>
                     </div>
@@ -319,30 +311,20 @@ export function ExplorerScreenNew({
 
           {selectedScenario && (
             <div className="mt-8 rounded-2xl border-2 border-orange-200 bg-orange-50 p-6">
-              <h3 className="mb-4 text-lg font-semibold text-gray-900">
-                Choose your level for this session
+              <h3 className="mb-2 text-lg font-semibold text-gray-900">
+                Ready to enter this situation?
               </h3>
-              <div className="mb-6 grid grid-cols-3 gap-3">
-                {levelOptions.map((level) => (
-                  <button
-                    key={level}
-                    type="button"
-                    onClick={() => onSelectLevel(level)}
-                    className={`rounded-xl px-4 py-3 text-sm font-medium transition-all ${
-                      selectedLevel === level
-                        ? 'bg-orange-500 text-white shadow-md'
-                        : 'bg-white text-gray-700 hover:bg-gray-50'
-                    }`}
-                  >
-                    {level}
-                  </button>
-                ))}
-              </div>
+              <p className="mb-6 text-sm text-gray-700">
+                You will practice this scene in {getLanguageLabel(selectedScenario.language_code)}
+                {selectedScenario.mode === 'free'
+                  ? ' with a more open-ended local conversation.'
+                  : ' with a more guided local exchange.'}
+              </p>
 
               <button
                 type="button"
                 onClick={onStartConversation}
-                disabled={isStartingSession || !selectedLevel}
+                disabled={isStartingSession}
                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-6 py-4 font-semibold text-white transition-colors hover:bg-orange-600 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isStartingSession ? (

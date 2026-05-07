@@ -13,16 +13,13 @@ import {
   createConversationSession,
   fetchConversationSession,
   fetchMyConversationHistory,
-  fetchMyLanguageLevel,
   fetchMyProfile,
-  updateMyLanguageLevel,
 } from './lib/triptalk-api';
 import { isSupabaseConfigured, supabase } from './lib/supabase';
 import { clearTokenCache } from './lib/auth-cache';
 import type {
   Country,
   ConversationSessionHistoryApiResponse,
-  Level,
   Screen,
   SelectedScenario,
   UserProfileApiResponse,
@@ -81,7 +78,6 @@ export default function App() {
   const [route, setRoute] = useState<AppRoute>(() =>
     typeof window === 'undefined' ? { screen: 'explorer', sessionId: null } : parseAppRoute(window.location.pathname)
   );
-  const [selectedLevel, setSelectedLevel] = useState<Level>(null);
   const [selectedCountry, setSelectedCountry] = useState<Country>(null);
   const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
   const [selectedScenario, setSelectedScenario] = useState<SelectedScenario | null>(null);
@@ -92,7 +88,6 @@ export default function App() {
   const [profile, setProfile] = useState<UserProfileApiResponse | null>(null);
   const [profileReady, setProfileReady] = useState(!isSupabaseConfigured);
   const [profileError, setProfileError] = useState<string | null>(null);
-  const [isPreparingScenario, setIsPreparingScenario] = useState(false);
   const [isStartingSession, setIsStartingSession] = useState(false);
   const [historyItems, setHistoryItems] = useState<ConversationSessionHistoryApiResponse[]>([]);
   const [historyLoading, setHistoryLoading] = useState(false);
@@ -130,7 +125,6 @@ export default function App() {
   }
 
   function resetFlowState() {
-    setSelectedLevel(null);
     setSelectedCountry(null);
     setSelectedCountryId(null);
     setSelectedScenario(null);
@@ -139,7 +133,6 @@ export default function App() {
     setProfile(null);
     setProfileError(null);
     setProfileReady(!isSupabaseConfigured);
-    setIsPreparingScenario(false);
     setIsStartingSession(false);
     setHistoryItems([]);
     setHistoryLoading(false);
@@ -300,14 +293,6 @@ export default function App() {
           partner_name: detail.partner_name,
           partner_role: detail.partner_role,
         });
-
-        if (
-          detail.level_at_start === 'Débutant' ||
-          detail.level_at_start === 'Intermédiaire' ||
-          detail.level_at_start === 'Avancé'
-        ) {
-          setSelectedLevel(detail.level_at_start);
-        }
       } catch {
         if (!ignore) {
           setProfileError("Impossible de charger la session demandée.");
@@ -340,30 +325,20 @@ export default function App() {
     }
   }
 
-  const handleLevelSelect = (level: Exclude<Level, null>) => {
-    setSelectedLevel(level);
-    setProfileError(null);
-  };
-
   async function handleStartConversation() {
     if (!selectedScenario) {
       setProfileError("Impossible de retrouver le scénario sélectionné.");
       return;
     }
-    if (!selectedLevel) {
-      setProfileError('Choisis un niveau avant de démarrer.');
-      return;
-    }
 
     try {
       setIsStartingSession(true);
-      await updateMyLanguageLevel(selectedScenario.language_code, selectedLevel);
-      const createdSession = await createConversationSession(selectedScenario.id, selectedLevel);
+      const createdSession = await createConversationSession(selectedScenario.id);
       setSessionId(createdSession.id);
       setActiveSessionStatus('active');
       navigateTo({ screen: 'conversation', sessionId: createdSession.id });
     } catch {
-      setProfileError("Impossible d'enregistrer le niveau pour cette langue.");
+      setProfileError("Impossible de démarrer cette conversation.");
     } finally {
       setIsStartingSession(false);
     }
@@ -373,33 +348,12 @@ export default function App() {
     setSelectedCountry(country);
     setSelectedCountryId(countryId);
     setSelectedScenario(null);
-    setSelectedLevel(null);
     setProfileError(null);
   };
 
   const handleScenarioSelect = async (scenario: SelectedScenario) => {
     setSelectedScenario(scenario);
     setProfileError(null);
-    setIsPreparingScenario(true);
-
-    try {
-      const languageLevel = await fetchMyLanguageLevel(scenario.language_code);
-      const nextLevel = languageLevel?.level;
-      if (
-        nextLevel === 'Débutant' ||
-        nextLevel === 'Intermédiaire' ||
-        nextLevel === 'Avancé'
-      ) {
-        setSelectedLevel(nextLevel);
-      } else {
-        setSelectedLevel(null);
-      }
-    } catch {
-      setSelectedLevel(null);
-      setProfileError("Impossible de charger le niveau pour cette langue.");
-    } finally {
-      setIsPreparingScenario(false);
-    }
   };
 
   async function handleSignOut() {
@@ -433,7 +387,6 @@ export default function App() {
   }
 
   function startNewConversation() {
-    setSelectedLevel(null);
     setSelectedCountry(null);
     setSelectedCountryId(null);
     setSelectedScenario(null);
@@ -551,13 +504,10 @@ export default function App() {
           selectedCountry={selectedCountry}
           selectedCountryId={selectedCountryId}
           selectedScenario={selectedScenario}
-          selectedLevel={selectedLevel}
           error={profileError}
-          isPreparingScenario={isPreparingScenario}
           isStartingSession={isStartingSession}
           onSelectCountry={handleCountrySelect}
           onSelectScenario={(scenario) => void handleScenarioSelect(scenario)}
-          onSelectLevel={handleLevelSelect}
           onStartConversation={() => void handleStartConversation()}
         />
       )}
