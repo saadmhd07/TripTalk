@@ -31,6 +31,14 @@ class Settings(BaseSettings):
     openai_tts_voice_default: str = "alloy"
     openai_tts_voice_chile: str = "onyx"
     openai_tts_voice_usa: str = "alloy"
+    tts_provider: str = "openai"
+
+    elevenlabs_api_key: str = ""
+    elevenlabs_tts_model: str = "eleven_multilingual_v2"
+    elevenlabs_tts_output_format: str = "mp3_44100_128"
+    elevenlabs_tts_voice_default: str = ""
+    elevenlabs_tts_voice_chile: str = ""
+    elevenlabs_tts_voice_usa: str = ""
 
     @property
     def effective_openai_chat_model(self) -> str:
