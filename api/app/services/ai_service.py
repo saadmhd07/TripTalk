@@ -80,7 +80,9 @@ class AIService:
                     "- Help the learner keep the conversation going.\n"
                     "- Return only valid JSON with keys response and decision.\n"
                     "- decision must be CONTINUE or END.\n"
-                    "- Use END only when the scenario is genuinely complete.\n"
+                    "- Use END only when the turn closes the scenario and no further learner reply is expected.\n"
+                    "- If the learner can still clarify, correct themselves, answer a follow-up, or move the situation forward, use CONTINUE.\n"
+                    "- Use CONTINUE for unresolved situations, follow-up requests, or any turn where the partner still expects a useful reply.\n"
                     "- If decision is END, response must be a natural in-character closing line.\n"
                 ),
             },

@@ -34,6 +34,8 @@ QUESTION FLOW:
   - "¿Es su primera vez en Chile?"
 - Ask at most 4 checkpoint questions after the opening
 - Once satisfied, close the exchange clearly and briefly
+- Only end the interaction when the checkpoint is truly finished and no further useful reply from the traveler is expected
+- If the traveler can still answer, clarify, correct themselves, or move the checkpoint forward, keep the interaction open
 - When the checkpoint is complete, end with a real closure such as:
   - "Perfecto. Todo en orden. Bienvenido a Chile."
   - "Muy bien. Puede pasar. Bienvenido a Chile."
