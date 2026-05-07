@@ -78,7 +78,6 @@ def seed_history() -> str:
             user_id=owner.id,
             scenario_id=scenario.id,
             status="active",
-            level_at_start="Intermédiaire",
         )
         foreign_session = ConversationSession(
             user_id=other.id,
@@ -113,7 +112,6 @@ def test_history_lists_only_current_user_sessions() -> None:
     assert data[0]["scenario_title"] == "Conversation libre"
     assert data[0]["mode"] == "free"
     assert data[0]["language_code"] == "es"
-    assert data[0]["level_at_start"] == "Intermédiaire"
     assert data[0]["last_message_preview"] == "Bienvenue au Chili, on peut parler de Santiago."
     assert data[0]["has_feedback"] is False
 
@@ -164,7 +162,7 @@ def test_create_session_persists_intro_message() -> None:
 
     session_response = client.post(
         "/api/v1/conversation-sessions",
-        json={"scenario_id": scenario_id, "level_at_start": "Débutant"},
+        json={"scenario_id": scenario_id},
     )
     assert session_response.status_code == 200
     session_id = session_response.json()["id"]
@@ -217,7 +215,7 @@ def test_immigration_session_auto_completes_after_closing_line(monkeypatch) -> N
     client = TestClient(app)
     session_response = client.post(
         "/api/v1/conversation-sessions",
-        json={"scenario_id": scenario_id, "level_at_start": "Débutant"},
+        json={"scenario_id": scenario_id},
     )
     assert session_response.status_code == 200
     session_id = session_response.json()["id"]

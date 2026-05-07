@@ -5,7 +5,6 @@ from app.models.message import Message
 from app.models.profile import Profile
 from app.models.scenario import Scenario
 from app.models.user import User
-from app.models.user_language_level import UserLanguageLevel
 
 __all__ = [
     "ConversationSession",
@@ -15,5 +14,4 @@ __all__ = [
     "Profile",
     "Scenario",
     "User",
-    "UserLanguageLevel",
 ]

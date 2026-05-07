@@ -39,7 +39,6 @@ def create_conversation_session(
         db,
         user_id=user.id,
         scenario_id=scenario.id,
-        level_at_start=payload.level_at_start,
     )
     if scenario.intro_message:
         conversation_repository.create_message(
@@ -54,7 +53,6 @@ def create_conversation_session(
         id=session.id,
         scenario_id=session.scenario_id,
         status=ConversationSessionStatus(session.status),
-        level_at_start=session.level_at_start,
         started_at=session.started_at,
         ended_at=session.ended_at,
     )
@@ -87,7 +85,6 @@ def list_my_conversation_sessions(
                 language_code=scenario.language_code if scenario else "",
                 mode=scenario.mode if scenario else "guided",
                 status=ConversationSessionStatus(session.status),
-                level_at_start=session.level_at_start,
                 intro_message=scenario.intro_message if scenario else None,
                 cultural_tip=scenario.cultural_tip if scenario else None,
                 vocabulary_hints=scenario.vocabulary_hints if scenario else None,
@@ -125,7 +122,6 @@ def get_conversation_session(
         language_code=scenario.language_code if scenario else "",
         mode=scenario.mode if scenario else "guided",
         status=ConversationSessionStatus(session.status),
-        level_at_start=session.level_at_start,
         intro_message=scenario.intro_message if scenario else None,
         cultural_tip=scenario.cultural_tip if scenario else None,
         vocabulary_hints=scenario.vocabulary_hints if scenario else None,
@@ -153,7 +149,6 @@ def complete_conversation_session(
         id=session.id,
         scenario_id=session.scenario_id,
         status=ConversationSessionStatus(session.status),
-        level_at_start=session.level_at_start,
         started_at=session.started_at,
         ended_at=session.ended_at,
     )

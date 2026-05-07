@@ -21,7 +21,6 @@ class ConversationSession(Base):
     user_id: Mapped[str] = mapped_column(ForeignKey("users.id"), index=True)
     scenario_id: Mapped[int] = mapped_column(ForeignKey("scenarios.id"), index=True)
     status: Mapped[str] = mapped_column(String(20), default=ConversationSessionStatus.ACTIVE.value)
-    level_at_start: Mapped[str | None] = mapped_column(String(50), nullable=True)
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=lambda: datetime.now(UTC))
     ended_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 

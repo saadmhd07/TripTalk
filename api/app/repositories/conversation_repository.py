@@ -17,13 +17,11 @@ class ConversationRepository:
         *,
         user_id: str,
         scenario_id: int,
-        level_at_start: str | None = None,
     ) -> ConversationSession:
         session = ConversationSession(
             user_id=user_id,
             scenario_id=scenario_id,
             status=ConversationSessionStatus.ACTIVE.value,
-            level_at_start=level_at_start,
         )
         db.add(session)
         db.flush()
