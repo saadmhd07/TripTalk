@@ -192,19 +192,19 @@ The current step-by-step MVP was useful to validate the product loop, but it is 
 
 The desktop MVP should use a shared application shell with:
 
-- a persistent top navigation bar
+- a persistent left sidebar
 - a central content area
 - visible authenticated user context
 - clear entry points to the main product sections
 
-Recommended top bar items:
+Current sidebar items:
 
 - `TripTalk`
 - `Explorer`
 - `Historique`
 - `Profil`
-- primary action `Nouvelle conversation`
-- user email / avatar / sign out
+- authenticated user context
+- sign out
 
 ### Main Product Sections
 
@@ -235,9 +235,11 @@ This becomes the page for an active session.
 
 Recommended layout:
 
-- left panel: partner, role, country, language, scenario, mode
-- center panel: conversation thread and composer
-- right panel: cultural tip, vocabulary, goal, context
+- central avatar stage
+- active scenario header and controls
+- conversation transcript in a dedicated side panel
+- voice-first controls with text fallback
+- feedback handoff once the checkpoint is complete
 
 #### 3. Historique
 
@@ -307,7 +309,7 @@ Recommended direction:
 Recommended order:
 
 1. Create a shared desktop `AppShell`
-2. Add top navigation and app-level route/state handling
+2. Add sidebar navigation and app-level route/state handling
 3. Turn country/scenario/level flow into `Explorer`
 4. Add a real `Profil` page
 5. Keep `Conversation` and `Historique` inside the shared shell
@@ -316,7 +318,7 @@ Recommended order:
 Current status:
 
 - [x] Shared desktop `AppShell`
-- [x] Top navigation and app-level route/state handling
+- [x] Sidebar navigation and app-level route/state handling
 - [x] `Explorer` page replacing the older selection wizard
 - [x] `Profil` page
 - [x] `Conversation` and `Historique` inside the shared shell
@@ -350,6 +352,9 @@ The product currently supports:
 - scenario language and mode metadata
 - scenario content fields for intro/cultural context
 - OpenAI-backed conversation replies
+- OpenAI-backed TTS and STT in the conversation flow
+- direct route-based access to active sessions and feedback pages
+- structured conversation completion decisions from the LLM (`CONTINUE` / `END`)
 - persisted sessions, messages, and feedback
 
 The codebase is no longer just a generated UI mock. The main product loop works end to end.
@@ -366,6 +371,9 @@ What is now solid:
 - per-language user level model
 - scenario-driven language, mode, and cultural metadata
 - desktop-oriented application shell with first-class sections
+- session URLs that survive reload
+- voice-first avatar conversation flow
+- bounded guided checkpoint behavior for the Chile immigration scenario
 
 What is still weak:
 
@@ -390,13 +398,15 @@ This means the next roadmap should focus less on structural refactors and more o
 - [x] AI response generation from backend
 - [x] Conversation history reload
 - [x] Feedback generation and display
+- [x] Conversation reload from direct session URL
+- [x] Guided scenario completion via LLM decision
 
 ### Frontend
 
 - [x] Cleaned unused generated UI kit
 - [x] Connected country list to backend
 - [x] Connected scenario list to backend
-- [x] Replaced fake microphone flow with text input
+- [x] Replaced fake microphone flow with real voice input + text fallback
 - [x] Added API helper layer with auth token injection
 - [x] Added Supabase client setup
 - [x] Added auth screen for sign in / sign up
@@ -405,13 +415,15 @@ This means the next roadmap should focus less on structural refactors and more o
 - [x] Load per-language level after scenario selection
 - [x] Stop depending on hardcoded `Chile` / `USA` flow assumptions
 - [x] Use scenario-driven content in conversation view when available
-- [x] Shared desktop shell with top navigation
+- [x] Shared desktop shell with left sidebar navigation
 - [x] Real `Explorer` page
 - [x] Real `Profil` page
 - [x] History page inside the shell
 - [x] Conversation page inside the shell
 - [x] Feedback page aligned with the shell
 - [x] Remove older fullscreen onboarding and selection components from the active UI
+- [x] Route-based navigation for explorer, history, profile, conversation, and feedback
+- [x] Avatar-centric conversation screen for the active scenario
 
 ### Backend
 
@@ -429,8 +441,10 @@ This means the next roadmap should focus less on structural refactors and more o
 - [x] Message persistence
 - [x] Feedback persistence
 - [x] OpenAI integration for replies
+- [x] OpenAI integration for TTS / STT
 - [x] OpenAI-backed feedback generation with fallback
 - [x] Supabase JWT verification
+- [x] Structured `CONTINUE` / `END` decision in conversation replies
 
 ### Infra / Auth
 
@@ -490,8 +504,8 @@ This means the next roadmap should focus less on structural refactors and more o
 ### Critical (Phase 1)
 - [ ] DEV_MODE hardcoded to True (bypasses auth in production)
 - [ ] Broad exception catching hides real errors (ai_service.py, feedback_service.py)
-- [ ] No logging for errors or OpenAI usage
-- [ ] No rate limiting on OpenAI endpoints (cost risk)
+- [x] Logging for errors and OpenAI usage
+- [x] Rate limiting on OpenAI-backed conversation/audio endpoints
 - [ ] Supabase token fetched on every API call (performance bottleneck)
 - [ ] App.tsx god component (13 state variables, 450+ lines)
 - [ ] python-jose dependency unused (should remove)
@@ -499,7 +513,7 @@ This means the next roadmap should focus less on structural refactors and more o
 ### High Priority (Phase 1-2)
 - [ ] Error messages hardcoded in French (no i18n)
 - [ ] No API response caching (countries, scenarios)
-- [ ] No request timeouts on OpenAI calls
+- [x] Request timeouts on OpenAI calls
 - [ ] JSON serialization anti-pattern in feedback storage
 - [ ] Missing database constraints (enums for mode/role/difficulty)
 - [ ] No pagination on conversation history
@@ -515,7 +529,7 @@ This means the next roadmap should focus less on structural refactors and more o
 ## Product Gaps
 
 ### Phase 1 (Portfolio Quality)
-- [ ] Conversation prompts lack cultural authenticity (generic Spanish vs Chilean)
+- [ ] Conversation prompts still need stronger cultural authenticity beyond the current Chile immigration pass
 - [ ] Feedback too generic (needs specific examples, vocabulary suggestions)
 - [ ] Only 2 countries (need Spain, Mexico, UK for variety)
 - [ ] Loading states missing (conversation start, message send)
@@ -523,7 +537,7 @@ This means the next roadmap should focus less on structural refactors and more o
 - [ ] Mobile responsive but not polished
 
 ### Phase 2 (User Testing)
-- [ ] No session recovery (page reload loses context)
+- [ ] Session recovery is still partial outside direct session routes
 - [ ] No conversation editing (typo corrections)
 - [ ] Profile lacks depth (no learning goals, preferences)
 - [ ] Navigation between screens could be smoother
@@ -535,8 +549,8 @@ This means the next roadmap should focus less on structural refactors and more o
 - [ ] No content recommendation (next scenario suggestions)
 
 ### Future Vision (Post-PMF)
-- [ ] Voice interaction
-- [ ] Animated avatars
+- [ ] Full duplex / real-time voice interaction
+- [ ] More advanced animated avatars and character systems
 - [ ] Advanced personalization
 - [ ] Community features (share conversations, leaderboards)
 
@@ -658,8 +672,8 @@ TripTalk has **multiple potential paths**:
 These require validated product-market fit first:
 
 - Native mobile apps (React Native/Flutter)
-- Voice interaction
-- Animated avatars
+- Full real-time voice conversation stack
+- Advanced animated avatars and richer character rendering
 - Advanced personalization
 - Content recommendation engine
 
@@ -676,7 +690,7 @@ Recent implementation work completed:
 - added scenario content fields such as intro message, cultural tip, vocabulary hints, partner name, and partner role
 - updated the frontend flow so level is chosen after scenario selection
 - removed frontend assumptions that only `Chile` and `USA` exist
-- introduced a desktop shell with persistent top navigation
+- introduced a desktop shell with persistent left sidebar navigation
 - replaced the older fullscreen selection wizard with a real `Explorer` page
 - added `Profil`, `Historique`, `Conversation`, and `Feedback` as first-class app sections
 - removed the old fullscreen onboarding and selection components from the active UI
