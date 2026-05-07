@@ -98,6 +98,39 @@ def test_session_speech_returns_audio_bytes(monkeypatch) -> None:
     assert response.content == b"fake-mp3"
 
 
+def test_session_speech_uses_elevenlabs_voice_id_when_provider_selected(monkeypatch) -> None:
+    session_id = seed_session()
+    previous_provider = audio_endpoint.settings.tts_provider
+    previous_default = audio_endpoint.settings.elevenlabs_tts_voice_default
+    previous_chile = audio_endpoint.settings.elevenlabs_tts_voice_chile
+
+    audio_endpoint.settings.tts_provider = "elevenlabs"
+    audio_endpoint.settings.elevenlabs_tts_voice_default = "voice-default"
+    audio_endpoint.settings.elevenlabs_tts_voice_chile = "voice-chile"
+
+    def fake_speech(*, text: str, voice: str | None = None, speed: float = 1.0) -> bytes:
+        assert text == "Hola"
+        assert voice == "voice-chile"
+        assert speed == 1.0
+        return b"fake-mp3"
+
+    monkeypatch.setattr(audio_endpoint.ai_service, "synthesize_speech", fake_speech)
+
+    client = TestClient(app)
+    response = client.post(
+        f"/api/v1/conversation-sessions/{session_id}/speech",
+        json={"text": "Hola"},
+    )
+
+    audio_endpoint.settings.tts_provider = previous_provider
+    audio_endpoint.settings.elevenlabs_tts_voice_default = previous_default
+    audio_endpoint.settings.elevenlabs_tts_voice_chile = previous_chile
+
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "audio/mpeg"
+    assert response.content == b"fake-mp3"
+
+
 def test_session_transcription_returns_text(monkeypatch) -> None:
     session_id = seed_session()
 

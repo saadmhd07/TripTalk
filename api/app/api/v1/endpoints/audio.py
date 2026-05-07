@@ -26,6 +26,15 @@ def _select_voice_for_scenario(
 ) -> str:
     del partner_name, partner_role
 
+    if settings.tts_provider.lower() == "elevenlabs":
+        if country_name == "Chile" and settings.elevenlabs_tts_voice_chile:
+            return settings.elevenlabs_tts_voice_chile
+
+        if country_name == "USA" and settings.elevenlabs_tts_voice_usa:
+            return settings.elevenlabs_tts_voice_usa
+
+        return settings.elevenlabs_tts_voice_default
+
     if country_name == "Chile":
         return settings.openai_tts_voice_chile
 

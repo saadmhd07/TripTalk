@@ -38,9 +38,12 @@ class AIService:
         self.client = OpenAI(api_key=settings.openai_api_key) if settings.openai_api_key else None
         self.chat_model = settings.effective_openai_chat_model
         self.feedback_model = settings.effective_openai_feedback_model
+        self.tts_provider = settings.tts_provider.lower()
         self.tts_model = settings.openai_tts_model
         self.stt_model = settings.openai_stt_model
         self.default_tts_voice = settings.openai_tts_voice_default
+        self.elevenlabs_tts_model = settings.elevenlabs_tts_model
+        self.elevenlabs_tts_output_format = settings.elevenlabs_tts_output_format
 
         if self.client is None:
             logger.warning("OpenAI client not initialized - API key missing")
@@ -206,6 +209,9 @@ class AIService:
         voice: str | None = None,
         speed: float = 1.0,
     ) -> bytes:
+        if self.tts_provider == "elevenlabs":
+            return self._synthesize_speech_elevenlabs(text=text, voice=voice)
+
         if self.client is None:
             logger.error("Cannot synthesize speech - OpenAI client not configured")
             raise ValueError("OpenAI is not configured yet.")
@@ -234,6 +240,51 @@ class AIService:
         finally:
             if output_path and output_path.exists():
                 os.unlink(output_path)
+
+    def _synthesize_speech_elevenlabs(
+        self,
+        *,
+        text: str,
+        voice: str | None = None,
+    ) -> bytes:
+        if not settings.elevenlabs_api_key:
+            logger.error("Cannot synthesize speech - ElevenLabs API key missing")
+            raise ValueError("ElevenLabs is not configured yet.")
+
+        if not voice:
+            logger.error("Cannot synthesize speech - ElevenLabs voice ID missing")
+            raise ValueError("ElevenLabs voice ID is not configured.")
+
+        try:
+            from elevenlabs.client import ElevenLabs
+        except ImportError as exc:
+            logger.error("Cannot synthesize speech - elevenlabs package missing")
+            raise ValueError("ElevenLabs SDK is not installed.") from exc
+
+        try:
+            client = ElevenLabs(api_key=settings.elevenlabs_api_key)
+            audio = client.text_to_speech.convert(
+                text=text,
+                voice_id=voice,
+                model_id=self.elevenlabs_tts_model,
+                output_format=self.elevenlabs_tts_output_format,
+            )
+
+            if isinstance(audio, bytes):
+                audio_bytes = audio
+            else:
+                audio_bytes = b"".join(
+                    chunk for chunk in audio if isinstance(chunk, (bytes, bytearray))
+                )
+
+            if not audio_bytes:
+                raise ValueError("Empty speech response")
+
+            log_openai_call(logger, "speech_synthesis_elevenlabs", self.elevenlabs_tts_model)
+            return audio_bytes
+        except Exception as exc:
+            log_error(logger, "ElevenLabs speech synthesis failed", exc, {"voice": voice})
+            raise ValueError("Speech synthesis failed") from exc
 
     def transcribe_audio(
         self,
