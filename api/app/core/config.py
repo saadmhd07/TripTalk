@@ -24,8 +24,21 @@ class Settings(BaseSettings):
 
     openai_api_key: str = ""
     openai_model: str = "gpt-4.1-mini"
+    openai_chat_model: str | None = None
+    openai_feedback_model: str | None = None
     openai_tts_model: str = "tts-1"
+    openai_stt_model: str = "whisper-1"
     openai_tts_voice_default: str = "alloy"
+    openai_tts_voice_chile: str = "onyx"
+    openai_tts_voice_usa: str = "alloy"
+
+    @property
+    def effective_openai_chat_model(self) -> str:
+        return self.openai_chat_model or self.openai_model
+
+    @property
+    def effective_openai_feedback_model(self) -> str:
+        return self.openai_feedback_model or self.effective_openai_chat_model
 
     model_config = SettingsConfigDict(
         env_file=".env",

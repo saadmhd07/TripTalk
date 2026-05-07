@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, Resp
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user_id, get_db_session
+from app.core.config import settings
 from app.core.rate_limit import limiter
 from app.repositories.conversation_repository import ConversationRepository
 from app.repositories.scenario_repository import ScenarioRepository
@@ -26,12 +27,12 @@ def _select_voice_for_scenario(
     del partner_name, partner_role
 
     if country_name == "Chile":
-        return "onyx"
+        return settings.openai_tts_voice_chile
 
     if country_name == "USA":
-        return "alloy"
+        return settings.openai_tts_voice_usa
 
-    return "alloy"
+    return settings.openai_tts_voice_default
 
 
 @router.post("/conversation-sessions/{session_id}/speech")

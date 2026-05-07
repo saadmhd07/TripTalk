@@ -36,8 +36,10 @@ class AIService:
 
     def __init__(self) -> None:
         self.client = OpenAI(api_key=settings.openai_api_key) if settings.openai_api_key else None
-        self.model = settings.openai_model
+        self.chat_model = settings.effective_openai_chat_model
+        self.feedback_model = settings.effective_openai_feedback_model
         self.tts_model = settings.openai_tts_model
+        self.stt_model = settings.openai_stt_model
         self.default_tts_voice = settings.openai_tts_voice_default
 
         if self.client is None:
@@ -84,14 +86,14 @@ class AIService:
 
         try:
             response = self.client.chat.completions.create(
-                model=self.model,
+                model=self.chat_model,
                 messages=messages,
                 response_format={"type": "json_object"},
                 timeout=30.0,
             )
 
             tokens_used = response.usage.total_tokens if response.usage else None
-            log_openai_call(logger, "conversation_reply", self.model, tokens=tokens_used)
+            log_openai_call(logger, "conversation_reply", self.chat_model, tokens=tokens_used)
 
             content = response.choices[0].message.content
             if not content:
@@ -160,7 +162,7 @@ class AIService:
 
         try:
             response = self.client.chat.completions.create(
-                model=self.model,
+                model=self.feedback_model,
                 messages=[
                     {
                         "role": "system",
@@ -180,7 +182,7 @@ class AIService:
             )
 
             tokens_used = response.usage.total_tokens if response.usage else None
-            log_openai_call(logger, "feedback_generation", self.model, tokens=tokens_used)
+            log_openai_call(logger, "feedback_generation", self.feedback_model, tokens=tokens_used)
 
             content = response.choices[0].message.content
             if not content:
@@ -246,13 +248,13 @@ class AIService:
         try:
             with audio_path.open("rb") as audio_file:
                 transcription = self.client.audio.transcriptions.create(
-                    model="whisper-1",
+                    model=self.stt_model,
                     file=audio_file,
                     language=language,
                     response_format="text",
                 )
 
-            log_openai_call(logger, "speech_transcription", "whisper-1")
+            log_openai_call(logger, "speech_transcription", self.stt_model)
 
             if hasattr(transcription, "text"):
                 text = transcription.text
