@@ -5,6 +5,7 @@ import type {
   ConversationSessionHistoryApiResponse,
   CountryApiItem,
   FeedbackApiResponse,
+  MessageExchangeApiResponse,
   MessageApiItem,
   ScenarioApiItem,
   UserLanguageLevelApiResponse,
@@ -93,7 +94,7 @@ export async function fetchConversationMessages(sessionId: string): Promise<Mess
 export async function sendConversationMessage(
   sessionId: string,
   content: string
-): Promise<MessageApiItem[]> {
+): Promise<MessageExchangeApiResponse> {
   try {
     const response = await apiFetch(`/conversation-sessions/${sessionId}/messages`, {
       method: 'POST',

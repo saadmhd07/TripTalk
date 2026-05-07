@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from app.api.deps import get_current_user_claims, get_db_session
+from app.api.v1.endpoints import messages as messages_endpoint
 from app.core.database import Base
 from app.main import app
 from app.models import ConversationSession, Country, Message, Scenario, User
@@ -174,3 +175,68 @@ def test_create_session_persists_intro_message() -> None:
     assert len(data) == 1
     assert data[0]["role"] == "assistant"
     assert data[0]["content"] == "Buenos días. Su pasaporte, por favor."
+
+
+def test_immigration_session_auto_completes_after_closing_line(monkeypatch) -> None:
+    scenario_id: int
+
+    with TestingSessionLocal() as db:
+        country = Country(code="CL", name="Chile", language="es", is_active=True)
+        db.add(country)
+        db.flush()
+
+        scenario = Scenario(
+            country_id=country.id,
+            slug="immigration-santiago",
+            title="Contrôle d'immigration à Santiago",
+            description="Scenario test",
+            language_code="es",
+            difficulty="beginner",
+            mode="guided",
+            intro_message="Buenos días. Su pasaporte, por favor.",
+            system_prompt="Test prompt",
+            is_active=True,
+        )
+        db.add(scenario)
+        db.commit()
+        scenario_id = scenario.id
+
+    closing_answers = iter(
+        [
+            {"response": "¿Cuántos días se va a quedar en Chile?", "decision": "CONTINUE"},
+            {"response": "¿Dónde se va a alojar en Santiago?", "decision": "CONTINUE"},
+            {"response": "Perfecto. Todo en orden. Bienvenido a Chile.", "decision": "END"},
+        ]
+    )
+
+    def fake_reply(**kwargs) -> dict[str, str]:
+        return next(closing_answers)
+
+    monkeypatch.setattr(messages_endpoint.ai_service, "generate_conversation_reply", fake_reply)
+
+    client = TestClient(app)
+    session_response = client.post(
+        "/api/v1/conversation-sessions",
+        json={"scenario_id": scenario_id, "level_at_start": "Débutant"},
+    )
+    assert session_response.status_code == 200
+    session_id = session_response.json()["id"]
+
+    for payload in ("turismo", "seis días", "en Providencia"):
+        reply_response = client.post(
+            f"/api/v1/conversation-sessions/{session_id}/messages",
+            json={"content": payload},
+        )
+        assert reply_response.status_code == 200
+
+    detail_response = client.get(f"/api/v1/conversation-sessions/{session_id}")
+    assert detail_response.status_code == 200
+    assert detail_response.json()["status"] == "completed"
+    assert detail_response.json()["ended_at"] is not None
+
+    blocked_response = client.post(
+        f"/api/v1/conversation-sessions/{session_id}/messages",
+        json={"content": "gracias"},
+    )
+    assert blocked_response.status_code == 409
+    assert blocked_response.json() == {"detail": "Session already completed"}

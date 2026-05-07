@@ -3,6 +3,8 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+from app.schemas.conversation_session import ConversationSessionStatus
+
 
 class MessageRole(StrEnum):
     USER = "user"
@@ -20,3 +22,8 @@ class MessageRead(BaseModel):
     role: MessageRole
     content: str
     created_at: datetime
+
+
+class MessageExchangeRead(BaseModel):
+    messages: list[MessageRead]
+    session_status: ConversationSessionStatus

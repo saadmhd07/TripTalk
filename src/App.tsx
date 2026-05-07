@@ -86,6 +86,7 @@ export default function App() {
   const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null);
   const [selectedScenario, setSelectedScenario] = useState<SelectedScenario | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [activeSessionStatus, setActiveSessionStatus] = useState<'active' | 'completed' | 'abandoned' | null>(null);
   const [authReady, setAuthReady] = useState(!isSupabaseConfigured);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfileApiResponse | null>(null);
@@ -134,6 +135,7 @@ export default function App() {
     setSelectedCountryId(null);
     setSelectedScenario(null);
     setSessionId(null);
+    setActiveSessionStatus(null);
     setProfile(null);
     setProfileError(null);
     setProfileReady(!isSupabaseConfigured);
@@ -282,6 +284,7 @@ export default function App() {
         }
 
         setSessionId(detail.id);
+        setActiveSessionStatus(detail.status);
         setSelectedCountry(detail.country_name);
         setSelectedCountryId(null);
         setSelectedScenario({
@@ -357,6 +360,7 @@ export default function App() {
       await updateMyLanguageLevel(selectedScenario.language_code, selectedLevel);
       const createdSession = await createConversationSession(selectedScenario.id, selectedLevel);
       setSessionId(createdSession.id);
+      setActiveSessionStatus('active');
       navigateTo({ screen: 'conversation', sessionId: createdSession.id });
     } catch {
       setProfileError("Impossible d'enregistrer le niveau pour cette langue.");
@@ -434,6 +438,7 @@ export default function App() {
     setSelectedCountryId(null);
     setSelectedScenario(null);
     setSessionId(null);
+    setActiveSessionStatus(null);
     setProfileError(null);
     setIsCompletingSession(false);
     navigateTo({ screen: 'explorer', sessionId: null });
@@ -449,6 +454,7 @@ export default function App() {
       setIsCompletingSession(true);
       setProfileError(null);
       await completeConversationSession(sessionId);
+      setActiveSessionStatus('completed');
       navigateTo({ screen: 'feedback', sessionId });
     } catch {
       setProfileError("Impossible de terminer la session pour générer le feedback.");
@@ -473,6 +479,7 @@ export default function App() {
       partner_role: item.partner_role,
     });
     setSessionId(item.id);
+    setActiveSessionStatus(item.status);
     navigateTo({ screen: 'conversation', sessionId: item.id });
   }
 
@@ -492,6 +499,7 @@ export default function App() {
       partner_role: item.partner_role,
     });
     setSessionId(item.id);
+    setActiveSessionStatus(item.status);
     navigateTo({ screen: 'feedback', sessionId: item.id });
   }
 
@@ -579,8 +587,10 @@ export default function App() {
           partnerName={selectedScenario?.partner_name}
           partnerRole={selectedScenario?.partner_role}
           actionError={profileError}
+          sessionStatus={activeSessionStatus ?? 'active'}
           onBackToExplorer={openExplorer}
           onFeedback={() => void handleOpenFeedback()}
+          onSessionCompleted={() => setActiveSessionStatus('completed')}
           isCompletingSession={isCompletingSession}
         />
       )}

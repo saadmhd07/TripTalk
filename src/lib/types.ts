@@ -57,6 +57,11 @@ export interface MessageApiItem {
   created_at: string;
 }
 
+export interface MessageExchangeApiResponse {
+  messages: MessageApiItem[];
+  session_status: 'active' | 'completed' | 'abandoned';
+}
+
 export interface FeedbackApiResponse {
   id: number;
   session_id: string;

@@ -107,9 +107,11 @@ interface ConversationScreenNewProps {
   partnerName?: string | null;
   partnerRole?: string | null;
   actionError?: string | null;
+  sessionStatus?: 'active' | 'completed' | 'abandoned';
   isCompletingSession?: boolean;
   onBackToExplorer: () => void;
   onFeedback: () => void;
+  onSessionCompleted?: () => void;
 }
 
 export function ConversationScreenNew({
@@ -126,9 +128,11 @@ export function ConversationScreenNew({
   partnerName,
   partnerRole,
   actionError,
+  sessionStatus = 'active',
   isCompletingSession = false,
   onBackToExplorer,
   onFeedback,
+  onSessionCompleted,
 }: ConversationScreenNewProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [draft, setDraft] = useState('');
@@ -141,6 +145,7 @@ export function ConversationScreenNew({
   const [recorderState, setRecorderState] = useState<RecorderState>('idle');
   const [showTranscript, setShowTranscript] = useState(false);
   const [showTextFallback, setShowTextFallback] = useState(false);
+  const [isCheckpointComplete, setIsCheckpointComplete] = useState(sessionStatus === 'completed');
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const audioUrlRef = useRef<string | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -160,6 +165,16 @@ export function ConversationScreenNew({
     () => [...messages].reverse().find((message) => message.sender === 'avatar') ?? null,
     [messages]
   );
+
+  useEffect(() => {
+    setIsCheckpointComplete(sessionStatus === 'completed');
+  }, [sessionStatus]);
+
+  useEffect(() => {
+    if (isCheckpointComplete) {
+      setShowTextFallback(false);
+    }
+  }, [isCheckpointComplete]);
 
   function hasAutoPlayedInitialMessage() {
     if (hasAutoPlayedInitialMessageRef.current) {
@@ -306,7 +321,7 @@ export function ConversationScreenNew({
   }
 
   async function startVoiceRecording() {
-    if (recorderState !== 'idle') {
+    if (recorderState !== 'idle' || isCheckpointComplete) {
       return;
     }
 
@@ -370,7 +385,7 @@ export function ConversationScreenNew({
   async function handleSendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const content = draft.trim();
-    if (!content || isSending) {
+    if (!content || isSending || isCheckpointComplete) {
       return;
     }
 
@@ -380,19 +395,24 @@ export function ConversationScreenNew({
     setCharacterState('thinking');
 
     try {
-      const createdMessages = await sendConversationMessage(sessionId, content);
-      const assistantReply = createdMessages.find((message) => message.role === 'assistant');
-
-      setMessages((prev) => [
-        ...prev,
-        ...createdMessages.map((message: MessageApiItem) => ({
+      const exchange = await sendConversationMessage(sessionId, content);
+      const assistantReply = exchange.messages.find((message) => message.role === 'assistant');
+      const nextMessages = [
+        ...messages,
+        ...exchange.messages.map((message: MessageApiItem) => ({
           sender: message.role === 'user' ? 'user' : 'avatar',
           text: message.content,
         })),
-      ]);
+      ];
+
+      setMessages(nextMessages);
       setDraft('');
 
       if (assistantReply?.content) {
+        if (exchange.session_status === 'completed') {
+          setIsCheckpointComplete(true);
+          onSessionCompleted?.();
+        }
         void playAvatarSpeech(assistantReply.content);
       } else {
         setCharacterState('idle');
@@ -445,7 +465,9 @@ export function ConversationScreenNew({
       ? 'translate-y-0 scale-[1.005]'
       : 'translate-y-0 scale-100';
   const activeStatusCopy =
-    recorderState === 'recording'
+    isCheckpointComplete
+      ? 'Checkpoint complete'
+      : recorderState === 'recording'
       ? 'Listening... tap to stop'
       : recorderState === 'transcribing'
       ? 'Transcribing...'
@@ -457,7 +479,8 @@ export function ConversationScreenNew({
       ? 'Thinking...'
       : null;
   const showFallbackInput =
-    showTextFallback || draft.trim().length > 0 || recorderState === 'transcribing';
+    !isCheckpointComplete &&
+    (showTextFallback || draft.trim().length > 0 || recorderState === 'transcribing');
 
   return (
     <div className="mx-auto min-h-[calc(100vh-4rem)] max-w-7xl">
@@ -596,53 +619,85 @@ export function ConversationScreenNew({
                       </p>
                     )}
 
-                    <div className="grid grid-cols-[56px_96px_56px] items-center justify-center gap-4">
-                      {lastSpokenText ? (
-                        <button
-                          type="button"
-                          onClick={() => void playAvatarSpeech(lastSpokenText)}
-                          className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-orange-200 bg-white text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
-                          aria-label="Replay voice"
-                        >
-                          <Play className="h-5 w-5" />
-                        </button>
-                      ) : (
-                        <div aria-hidden="true" className="h-14 w-14" />
-                      )}
+                    {isCheckpointComplete ? (
+                      <div className="space-y-3 text-center">
+                        <p className="text-sm font-medium text-emerald-700">
+                          Checkpoint complete. You can review your feedback now.
+                        </p>
+                        <div className="flex items-center justify-center gap-4">
+                          {lastSpokenText ? (
+                            <button
+                              type="button"
+                              onClick={() => void playAvatarSpeech(lastSpokenText)}
+                              className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-orange-200 bg-white text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
+                              aria-label="Replay voice"
+                            >
+                              <Play className="h-5 w-5" />
+                            </button>
+                          ) : (
+                            <div aria-hidden="true" className="h-14 w-14" />
+                          )}
+                          <button
+                            type="button"
+                            onClick={onFeedback}
+                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-5 py-3 font-semibold text-white transition hover:bg-slate-800"
+                          >
+                            <Sparkles className="h-4 w-4" />
+                            See feedback
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-[56px_96px_56px] items-center justify-center gap-4">
+                          {lastSpokenText ? (
+                            <button
+                              type="button"
+                              onClick={() => void playAvatarSpeech(lastSpokenText)}
+                              className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-orange-200 bg-white text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
+                              aria-label="Replay voice"
+                            >
+                              <Play className="h-5 w-5" />
+                            </button>
+                          ) : (
+                            <div aria-hidden="true" className="h-14 w-14" />
+                          )}
 
-                      <button
-                        type="button"
-                        onClick={
-                          recorderState === 'recording'
-                            ? stopVoiceRecording
-                            : () => void startVoiceRecording()
-                        }
-                        disabled={recorderState === 'transcribing' || isSending}
-                        className={`flex h-24 w-24 items-center justify-center rounded-full border-8 text-white shadow-[0_20px_45px_rgba(249,115,22,0.3)] transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                          recorderState === 'recording'
-                            ? 'border-red-200 bg-red-500 hover:bg-red-600'
-                            : 'border-orange-100 bg-gradient-to-br from-orange-500 to-orange-600 hover:scale-[1.02]'
-                        }`}
-                        aria-label={recorderState === 'recording' ? 'Stop recording' : 'Start recording'}
-                      >
-                        {recorderState === 'recording' ? (
-                          <Square className="h-8 w-8" />
-                        ) : (
-                          <Mic className="h-8 w-8" />
-                        )}
-                      </button>
+                          <button
+                            type="button"
+                            onClick={
+                              recorderState === 'recording'
+                                ? stopVoiceRecording
+                                : () => void startVoiceRecording()
+                            }
+                            disabled={recorderState === 'transcribing' || isSending}
+                            className={`flex h-24 w-24 items-center justify-center rounded-full border-8 text-white shadow-[0_20px_45px_rgba(249,115,22,0.3)] transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                              recorderState === 'recording'
+                                ? 'border-red-200 bg-red-500 hover:bg-red-600'
+                                : 'border-orange-100 bg-gradient-to-br from-orange-500 to-orange-600 hover:scale-[1.02]'
+                            }`}
+                            aria-label={recorderState === 'recording' ? 'Stop recording' : 'Start recording'}
+                          >
+                            {recorderState === 'recording' ? (
+                              <Square className="h-8 w-8" />
+                            ) : (
+                              <Mic className="h-8 w-8" />
+                            )}
+                          </button>
 
-                      <button
-                        type="button"
-                        onClick={() => setShowTextFallback((current) => !current)}
-                        className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-orange-200 bg-white text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
-                        aria-label={showFallbackInput ? 'Hide text fallback' : 'Open text fallback'}
-                      >
-                        <MessageSquareText className="h-5 w-5" />
-                      </button>
-                    </div>
+                          <button
+                            type="button"
+                            onClick={() => setShowTextFallback((current) => !current)}
+                            className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-orange-200 bg-white text-slate-700 transition hover:border-orange-300 hover:bg-orange-50"
+                            aria-label={showFallbackInput ? 'Hide text fallback' : 'Open text fallback'}
+                          >
+                            <MessageSquareText className="h-5 w-5" />
+                          </button>
+                        </div>
 
-                    <p className="text-center text-sm text-slate-500">{focusCopy.pressure}</p>
+                        <p className="text-center text-sm text-slate-500">{focusCopy.pressure}</p>
+                      </>
+                    )}
                   </div>
                 </div>
 
