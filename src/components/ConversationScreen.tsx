@@ -120,10 +120,10 @@ export function ConversationScreen({
     setError(null);
 
     try {
-      const createdMessages = await sendConversationMessage(sessionId, content);
+      const exchange = await sendConversationMessage(sessionId, content);
       setMessages((prev) => [
         ...prev,
-        ...createdMessages.map((message) => ({
+        ...exchange.messages.map((message) => ({
           sender: message.role === 'user' ? 'user' : 'avatar',
           text: message.content,
         })),

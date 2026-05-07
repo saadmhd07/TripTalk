@@ -11,6 +11,26 @@ from app.core.logging import get_logger, log_error, log_openai_call
 logger = get_logger(__name__)
 
 
+def _extract_json_object(raw_content: str) -> dict:
+    stripped = raw_content.strip()
+
+    try:
+        return json.loads(stripped)
+    except json.JSONDecodeError:
+        pass
+
+    fenced = stripped.removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+    if fenced != stripped:
+        return json.loads(fenced)
+
+    start = stripped.find("{")
+    end = stripped.rfind("}")
+    if start != -1 and end != -1 and end > start:
+        return json.loads(stripped[start : end + 1])
+
+    raise json.JSONDecodeError("No JSON object found", stripped, 0)
+
+
 class AIService:
     """Thin wrapper around OpenAI calls used by the MVP."""
 
@@ -31,10 +51,10 @@ class AIService:
         scenario_title: str,
         difficulty: str,
         history: list[dict[str, str]],
-    ) -> str:
+    ) -> dict[str, str]:
         if self.client is None:
             logger.error("Cannot generate reply - OpenAI client not configured")
-            return "OpenAI is not configured yet."
+            return {"response": "OpenAI is not configured yet.", "decision": "CONTINUE"}
 
         base_system_prompt = system_prompt or (
             "You are a friendly local conversation partner helping a language learner practice."
@@ -53,6 +73,10 @@ class AIService:
                     "- Stay in character.\n"
                     "- Ask follow-up questions when useful.\n"
                     "- Help the learner keep the conversation going.\n"
+                    "- Return only valid JSON with keys response and decision.\n"
+                    "- decision must be CONTINUE or END.\n"
+                    "- Use END only when the scenario is genuinely complete.\n"
+                    "- If decision is END, response must be a natural in-character closing line.\n"
                 ),
             },
             *history,
@@ -62,6 +86,7 @@ class AIService:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
+                response_format={"type": "json_object"},
                 timeout=30.0,
             )
 
@@ -71,12 +96,40 @@ class AIService:
             content = response.choices[0].message.content
             if not content:
                 logger.warning("Empty response from OpenAI")
-                return "I could not generate a response right now."
-            return content.strip()
+                return {
+                    "response": "I could not generate a response right now.",
+                    "decision": "CONTINUE",
+                }
+
+            data = _extract_json_object(content)
+            reply_text = str(data.get("response", "")).strip()
+            decision = str(data.get("decision", "CONTINUE")).strip().upper()
+
+            if not reply_text:
+                logger.warning("Missing conversation reply text in structured response")
+                return {
+                    "response": "I could not generate a response right now.",
+                    "decision": "CONTINUE",
+                }
+
+            if decision not in {"CONTINUE", "END"}:
+                decision = "CONTINUE"
+
+            return {"response": reply_text, "decision": decision}
+
+        except json.JSONDecodeError as e:
+            log_error(logger, "Failed to parse conversation reply JSON", e, {"scenario": scenario_title})
+            return {
+                "response": "I am having trouble responding right now. Please try again.",
+                "decision": "CONTINUE",
+            }
 
         except OpenAIError as e:
             log_error(logger, "OpenAI conversation reply failed", e, {"scenario": scenario_title})
-            return "I am having trouble responding right now. Please try again."
+            return {
+                "response": "I am having trouble responding right now. Please try again.",
+                "decision": "CONTINUE",
+            }
 
     def generate_feedback(
         self,

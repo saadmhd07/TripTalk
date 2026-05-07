@@ -6,7 +6,8 @@ from app.core.logging import get_logger
 from app.core.rate_limit import limiter
 from app.repositories.conversation_repository import ConversationRepository
 from app.repositories.scenario_repository import ScenarioRepository
-from app.schemas.message import MessageCreate, MessageRead, MessageRole
+from app.schemas.conversation_session import ConversationSessionStatus
+from app.schemas.message import MessageCreate, MessageExchangeRead, MessageRead, MessageRole
 from app.services.ai_service import AIService
 
 logger = get_logger(__name__)
@@ -40,7 +41,7 @@ def list_messages(
     ]
 
 
-@router.post("/conversation-sessions/{session_id}/messages", response_model=list[MessageRead])
+@router.post("/conversation-sessions/{session_id}/messages", response_model=MessageExchangeRead)
 @limiter.limit("20/minute")
 def create_message(
     request: Request,
@@ -48,12 +49,14 @@ def create_message(
     payload: MessageCreate,
     user_id: str = Depends(get_current_user_id),
     db: Session = Depends(get_db_session),
-) -> list[MessageRead]:
+) -> MessageExchangeRead:
     # Store user_id in request state for rate limiting
     request.state.user_id = user_id
     session = conversation_repository.get_session_for_user(db, session_id=session_id, user_id=user_id)
     if session is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+    if session.status != "active":
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Session already completed")
 
     user_message = conversation_repository.create_message(
         db,
@@ -72,13 +75,14 @@ def create_message(
         if message.role in {MessageRole.USER.value, MessageRole.ASSISTANT.value}
     ]
 
-    assistant_content = ai_service.generate_conversation_reply(
+    assistant_result = ai_service.generate_conversation_reply(
         system_prompt=scenario.system_prompt,
         country_name=scenario.country.name if scenario.country else "Unknown",
         scenario_title=scenario.title,
         difficulty=scenario.difficulty,
         history=history,
     )
+    assistant_content = assistant_result["response"]
 
     assistant_message = conversation_repository.create_message(
         db,
@@ -86,21 +90,27 @@ def create_message(
         role=MessageRole.ASSISTANT.value,
         content=assistant_content,
     )
+    if assistant_result["decision"] == "END":
+        conversation_repository.complete_session(db, session)
+
     db.commit()
 
-    return [
-        MessageRead(
-            id=user_message.id,
-            session_id=user_message.session_id,
-            role=MessageRole.USER,
-            content=user_message.content,
-            created_at=user_message.created_at,
-        ),
-        MessageRead(
-            id=assistant_message.id,
-            session_id=assistant_message.session_id,
-            role=MessageRole.ASSISTANT,
-            content=assistant_message.content,
-            created_at=assistant_message.created_at,
-        ),
-    ]
+    return MessageExchangeRead(
+        messages=[
+            MessageRead(
+                id=user_message.id,
+                session_id=user_message.session_id,
+                role=MessageRole.USER,
+                content=user_message.content,
+                created_at=user_message.created_at,
+            ),
+            MessageRead(
+                id=assistant_message.id,
+                session_id=assistant_message.session_id,
+                role=MessageRole.ASSISTANT,
+                content=assistant_message.content,
+                created_at=assistant_message.created_at,
+            ),
+        ],
+        session_status=ConversationSessionStatus(session.status),
+    )
