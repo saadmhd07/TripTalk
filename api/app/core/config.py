@@ -1,6 +1,11 @@
 from functools import lru_cache
+from typing import Literal
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+ReasoningEffort = Literal["none", "minimal", "low", "medium", "high", "xhigh"]
 
 
 class Settings(BaseSettings):
@@ -26,6 +31,8 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4.1-mini"
     openai_chat_model: str | None = None
     openai_feedback_model: str | None = None
+    openai_chat_reasoning_effort: ReasoningEffort | None = None
+    openai_feedback_reasoning_effort: ReasoningEffort | None = None
     openai_tts_model: str = "tts-1"
     openai_stt_model: str = "whisper-1"
     openai_tts_voice_default: str = "alloy"
@@ -47,6 +54,30 @@ class Settings(BaseSettings):
     @property
     def effective_openai_feedback_model(self) -> str:
         return self.openai_feedback_model or self.effective_openai_chat_model
+
+    @property
+    def effective_openai_chat_reasoning_effort(self) -> ReasoningEffort | None:
+        return self.openai_chat_reasoning_effort
+
+    @property
+    def effective_openai_feedback_reasoning_effort(self) -> ReasoningEffort | None:
+        return self.openai_feedback_reasoning_effort or self.effective_openai_chat_reasoning_effort
+
+    @field_validator("openai_chat_model", "openai_feedback_model", mode="before")
+    @classmethod
+    def empty_model_strings_to_none(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip()
+        return stripped or None
+
+    @field_validator("openai_chat_reasoning_effort", "openai_feedback_reasoning_effort", mode="before")
+    @classmethod
+    def empty_reasoning_strings_to_none(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        stripped = value.strip().lower()
+        return stripped or None
 
     model_config = SettingsConfigDict(
         env_file=".env",
