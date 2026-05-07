@@ -64,12 +64,13 @@ export interface MessageExchangeApiResponse {
 export interface FeedbackApiResponse {
   id: number;
   session_id: string;
-  global_score: number;
-  vocabulary_score: number | null;
-  fluency_score: number | null;
-  strengths: string[];
-  improvements: string[];
-  cultural_tip: string | null;
+  readiness_score: number;
+  situation_verdict: string;
+  perceived_impression: string;
+  key_moment: string;
+  natural_response_tips: string[];
+  cultural_code: string | null;
+  next_step: string;
   created_at: string;
 }
 
