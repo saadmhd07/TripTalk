@@ -360,9 +360,9 @@ export function ConversationScreenNew({
           await sendMessageContent(transcript, { restoreDraftOnError: true });
         } catch {
           setError('Voice transcription is unavailable right now.');
+          setCharacterState('idle');
         } finally {
           setRecorderState('idle');
-          setCharacterState('idle');
         }
       };
 
