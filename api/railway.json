@@ -7,8 +7,8 @@
     ]
   },
   "deploy": {
-    "startCommand": "uvicorn app.main:app --host 0.0.0.0 --port $PORT",
-    "preDeployCommand": "alembic upgrade head && seed-reference-data",
+    "startCommand": "python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT",
+    "preDeployCommand": "python -m alembic -c alembic.ini upgrade head && python -m app.seed",
     "healthcheckPath": "/health",
     "healthcheckTimeout": 100,
     "restartPolicyType": "ON_FAILURE",
