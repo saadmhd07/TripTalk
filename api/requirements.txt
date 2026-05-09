@@ -1,0 +1,3 @@
+# Railway/Railpack uses requirements.txt for pip dependency installation.
+# Keep the dependency list in pyproject.toml as the single source of truth.
+-e .
