@@ -36,6 +36,7 @@ class ConversationSessionHistoryRead(BaseModel):
     vocabulary_hints: str | None = None
     partner_name: str | None = None
     partner_role: str | None = None
+    avatar_id: str | None = None
     last_message_preview: str | None = None
     has_feedback: bool
     started_at: datetime
@@ -56,5 +57,6 @@ class ConversationSessionDetailRead(BaseModel):
     vocabulary_hints: str | None = None
     partner_name: str | None = None
     partner_role: str | None = None
+    avatar_id: str | None = None
     started_at: datetime
     ended_at: datetime | None = None

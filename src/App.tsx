@@ -292,6 +292,7 @@ export default function App() {
           vocabulary_hints: detail.vocabulary_hints,
           partner_name: detail.partner_name,
           partner_role: detail.partner_role,
+          avatar_id: detail.avatar_id,
         });
       } catch {
         if (!ignore) {
@@ -430,6 +431,7 @@ export default function App() {
       vocabulary_hints: item.vocabulary_hints,
       partner_name: item.partner_name,
       partner_role: item.partner_role,
+      avatar_id: item.avatar_id,
     });
     setSessionId(item.id);
     setActiveSessionStatus(item.status);
@@ -450,6 +452,7 @@ export default function App() {
       vocabulary_hints: item.vocabulary_hints,
       partner_name: item.partner_name,
       partner_role: item.partner_role,
+      avatar_id: item.avatar_id,
     });
     setSessionId(item.id);
     setActiveSessionStatus(item.status);
@@ -536,6 +539,9 @@ export default function App() {
           vocabularyHints={parseVocabularyHints(selectedScenario?.vocabulary_hints)}
           partnerName={selectedScenario?.partner_name}
           partnerRole={selectedScenario?.partner_role}
+          avatarId={selectedScenario?.avatar_id}
+          userDisplayName={profile?.display_name}
+          userEmail={profile?.email ?? session?.user.email}
           actionError={profileError}
           sessionStatus={activeSessionStatus ?? 'active'}
           onBackToExplorer={openExplorer}

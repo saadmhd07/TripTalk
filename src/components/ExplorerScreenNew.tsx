@@ -5,6 +5,7 @@ import {
   getCountryPresentation,
   getLanguageLabel,
   getScenarioPresentation,
+  LAUNCH_COUNTRY_CODES,
 } from '../lib/presentation';
 import { fetchCountries, fetchCountryScenarios } from '../lib/triptalk-api';
 import type { CountryApiItem, ScenarioApiItem, SelectedScenario } from '../lib/types';
@@ -174,14 +175,22 @@ export function ExplorerScreenNew({
               const isActive = country.id === selectedCountryId;
               const hasImage = countryImageExists(country.code);
               const isFeatured = country.code === 'CL';
+              const isLaunchCountry = LAUNCH_COUNTRY_CODES.includes(country.code);
 
               return (
                 <button
                   key={country.id}
                   type="button"
-                  onClick={() => onSelectCountry(country.name, country.id)}
+                  onClick={() => {
+                    if (isLaunchCountry) {
+                      onSelectCountry(country.name, country.id);
+                    }
+                  }}
+                  disabled={!isLaunchCountry}
                   className={`group relative overflow-hidden rounded-2xl transition-all ${
-                    isActive
+                    !isLaunchCountry
+                      ? 'cursor-not-allowed grayscale opacity-55'
+                      : isActive
                       ? 'ring-4 ring-orange-500'
                       : 'hover:scale-[1.02] hover:shadow-xl'
                   }`}
@@ -222,6 +231,11 @@ export function ExplorerScreenNew({
                       {isActive && (
                         <span className="inline-flex items-center gap-2 rounded-lg bg-white/20 px-3 py-1.5 text-sm font-medium text-white">
                           Selected
+                        </span>
+                      )}
+                      {!isLaunchCountry && (
+                        <span className="inline-flex items-center gap-2 rounded-lg bg-white/90 px-3 py-1.5 text-sm font-medium text-gray-700">
+                          Soon
                         </span>
                       )}
                     </div>

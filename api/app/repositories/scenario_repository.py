@@ -12,6 +12,7 @@ class ScenarioRepository:
             select(Scenario)
             .where(Scenario.country_id == country_id)
             .where(Scenario.is_active.is_(True))
+            .where(Scenario.mode == "guided")
             .order_by(Scenario.id.asc())
         )
         return list(db.scalars(stmt))

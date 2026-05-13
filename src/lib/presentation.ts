@@ -4,6 +4,8 @@ import {
   Coffee,
   Globe2,
   Home,
+  Hotel,
+  Utensils,
   MessageSquare,
   Plane,
   Users,
@@ -13,7 +15,8 @@ type IconComponent = typeof Plane;
 
 export const FEATURED_COUNTRY_CODE = 'CL';
 export const FEATURED_COUNTRY_NAME = 'Chile';
-export const FEATURED_SCENARIO_SLUG = 'aeroport-santiago';
+export const FEATURED_SCENARIO_SLUG = 'immigration-santiago';
+export const LAUNCH_COUNTRY_CODES = ['CL', 'US', 'FR'];
 
 const countryOverrides: Record<
   string,
@@ -38,6 +41,14 @@ const countryOverrides: Record<
     tagline: 'Anglais américain avec culture et expressions US',
     image:
       'https://images.unsplash.com/photo-1542223616-9de9adb5e3e8?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxVU0ElMjBBbWVyaWNhbiUyMGNpdHlzY2FwZXxlbnwxfHx8fDE3NjUyMzI1NTh8MA&ixlib=rb-4.1.0&q=80&w=1080',
+    gradient: 'from-blue-600/90 to-red-500/90',
+    bgColor: 'bg-gradient-to-br from-blue-600 to-red-500',
+  },
+  France: {
+    flag: '🇫🇷',
+    tagline: 'Français du quotidien avec codes de politesse locaux',
+    image:
+      'https://images.unsplash.com/photo-1502602898657-3e91760cbb34?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080',
     gradient: 'from-blue-600/90 to-red-500/90',
     bgColor: 'bg-gradient-to-br from-blue-600 to-red-500',
   },
@@ -91,6 +102,11 @@ const scenarioSlugPresentation: Record<
     color: 'bg-slate-50 text-slate-700',
     iconColor: 'text-slate-500',
   },
+  'cafeteria-santiago': {
+    icon: Coffee,
+    color: 'bg-orange-50 text-orange-700',
+    iconColor: 'text-orange-500',
+  },
   'taxi-uber-santiago': {
     icon: Car,
     color: 'bg-amber-50 text-amber-700',
@@ -106,10 +122,30 @@ const scenarioSlugPresentation: Record<
     color: 'bg-blue-50 text-blue-700',
     iconColor: 'text-blue-500',
   },
+  'hotel-checkin-usa': {
+    icon: Hotel,
+    color: 'bg-blue-50 text-blue-700',
+    iconColor: 'text-blue-500',
+  },
   'order-coffee': {
     icon: Coffee,
     color: 'bg-orange-50 text-orange-700',
     iconColor: 'text-orange-500',
+  },
+  'arrivee-cdg': {
+    icon: Plane,
+    color: 'bg-indigo-50 text-indigo-700',
+    iconColor: 'text-indigo-500',
+  },
+  'boulangerie-paris': {
+    icon: Coffee,
+    color: 'bg-rose-50 text-rose-700',
+    iconColor: 'text-rose-500',
+  },
+  'restaurant-paris': {
+    icon: Utensils,
+    color: 'bg-emerald-50 text-emerald-700',
+    iconColor: 'text-emerald-500',
   },
   'free-talk-usa': {
     icon: Users,
@@ -144,16 +180,18 @@ export function getScenarioFocusCopy(slug: string) {
   };
 }
 
-const avatarOverrides: Record<
+type AvatarPresentation = {
+  name: string;
+  emoji: string;
+  avatarId?: string;
+  imageUrl?: string;
+  bgColor: string;
+  role: string;
+};
+
+const countryAvatarFallbacks: Record<
   string,
-  {
-    name: string;
-    emoji: string;
-    avatarId?: string;
-    imageUrl?: string;
-    bgColor: string;
-    role: string;
-  }
+  AvatarPresentation
 > = {
   Chile: {
     name: 'Matías',
@@ -168,35 +206,70 @@ const avatarOverrides: Record<
     bgColor: 'bg-gradient-to-br from-blue-500 to-red-400',
     role: 'Guide locale américaine',
   },
+  France: {
+    name: 'Camille',
+    emoji: '👩🏻',
+    bgColor: 'bg-gradient-to-br from-blue-500 to-rose-400',
+    role: 'Guide locale française',
+  },
 };
 
-const partnerAvatarOverrides: Record<
+const avatarRegistry: Record<
   string,
-  {
-    name: string;
-    emoji: string;
-    avatarId?: string;
-    imageUrl?: string;
-    bgColor: string;
-    role: string;
-  }
+  AvatarPresentation
 > = {
-  'Oficial Ramírez': {
+  'oficial-ramirez': {
     name: 'Oficial Ramírez',
     emoji: '👮🏽',
     avatarId: 'oficial-ramirez',
     bgColor: 'bg-gradient-to-br from-slate-700 to-slate-900',
     role: 'Control de Pasaportes · PDI',
   },
+  carlos: {
+    name: 'Carlos',
+    emoji: '👩🏽',
+    avatarId: 'carlos',
+    bgColor: 'bg-gradient-to-br from-orange-400 to-rose-500',
+    role: 'Barista chilien à Santiago',
+  },
+  ashley: {
+    name: 'Ashley',
+    emoji: '👩🏼',
+    avatarId: 'ashley',
+    bgColor: 'bg-gradient-to-br from-blue-700 to-slate-900',
+    role: "Réceptionniste d'hôtel aux États-Unis",
+  },
+  maya: {
+    name: 'Maya',
+    emoji: '👩🏾',
+    avatarId: 'maya',
+    bgColor: 'bg-gradient-to-br from-amber-400 to-orange-600',
+    role: 'Barista américaine',
+  },
+  etienne: {
+    name: 'Étienne',
+    emoji: '🧑🏻',
+    avatarId: 'etienne',
+    bgColor: 'bg-gradient-to-br from-emerald-500 to-stone-600',
+    role: 'Serveur dans un restaurant parisien',
+  },
+  nathalie: {
+    name: 'Nathalie',
+    emoji: '👩🏼',
+    avatarId: 'nathalie',
+    bgColor: 'bg-gradient-to-br from-rose-400 to-stone-500',
+    role: 'Boulangère parisienne',
+  },
 };
 
 export function getConversationAvatarPresentation(
   countryName: string,
+  avatarId?: string,
   partnerName?: string,
   partnerRole?: string
 ) {
-  const partnerOverride = partnerName ? partnerAvatarOverrides[partnerName] : undefined;
-  const fallback = avatarOverrides[countryName] ?? {
+  const avatar = avatarId ? avatarRegistry[avatarId] : undefined;
+  const fallback = countryAvatarFallbacks[countryName] ?? {
     name: countryName,
     emoji: '🧑',
     imageUrl: undefined,
@@ -205,9 +278,9 @@ export function getConversationAvatarPresentation(
   };
 
   return {
-    ...(partnerOverride ?? fallback),
-    name: partnerName || partnerOverride?.name || fallback.name,
-    role: partnerRole || partnerOverride?.role || fallback.role,
+    ...(avatar ?? fallback),
+    name: partnerName || avatar?.name || fallback.name,
+    role: partnerRole || avatar?.role || fallback.role,
   };
 }
 

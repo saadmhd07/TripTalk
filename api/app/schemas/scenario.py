@@ -15,4 +15,5 @@ class ScenarioRead(BaseModel):
     vocabulary_hints: str | None = None
     partner_name: str | None = None
     partner_role: str | None = None
+    avatar_id: str | None = None
     is_active: bool

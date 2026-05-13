@@ -21,6 +21,7 @@ export interface SelectedScenario {
   vocabulary_hints?: string | null;
   partner_name?: string | null;
   partner_role?: string | null;
+  avatar_id?: string | null;
 }
 
 export interface CountryApiItem {
@@ -45,6 +46,7 @@ export interface ScenarioApiItem {
   vocabulary_hints: string | null;
   partner_name: string | null;
   partner_role: string | null;
+  avatar_id: string | null;
   is_active: boolean;
 }
 
@@ -88,6 +90,7 @@ export interface ConversationSessionHistoryApiResponse {
   vocabulary_hints: string | null;
   partner_name: string | null;
   partner_role: string | null;
+  avatar_id: string | null;
   last_message_preview: string | null;
   has_feedback: boolean;
   started_at: string;
@@ -108,6 +111,7 @@ export interface ConversationSessionDetailApiResponse {
   vocabulary_hints: string | null;
   partner_name: string | null;
   partner_role: string | null;
+  avatar_id: string | null;
   started_at: string;
   ended_at: string | null;
 }

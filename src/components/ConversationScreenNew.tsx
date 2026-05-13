@@ -40,6 +40,7 @@ interface AnimatedAvatarProps {
   portraitMotionClass: string;
   characterState: CharacterState;
   recorderState: RecorderState;
+  cupName?: string | null;
 }
 
 function AnimatedAvatar({
@@ -48,6 +49,7 @@ function AnimatedAvatar({
   portraitMotionClass,
   characterState,
   recorderState,
+  cupName,
 }: AnimatedAvatarProps) {
   const isSpeaking = characterState === 'speaking';
   const isListening = recorderState === 'recording';
@@ -82,6 +84,7 @@ function AnimatedAvatar({
           <CharacterAvatar
             avatarId={visibleAvatar.avatarId}
             name={visibleAvatar.name}
+            cupName={cupName ?? undefined}
             characterState={characterState}
             recorderState={recorderState}
           />
@@ -106,6 +109,9 @@ interface ConversationScreenNewProps {
   vocabularyHints?: string[] | null;
   partnerName?: string | null;
   partnerRole?: string | null;
+  avatarId?: string | null;
+  userDisplayName?: string | null;
+  userEmail?: string | null;
   actionError?: string | null;
   sessionStatus?: 'active' | 'completed' | 'abandoned';
   isCompletingSession?: boolean;
@@ -127,6 +133,9 @@ export function ConversationScreenNew({
   vocabularyHints,
   partnerName,
   partnerRole,
+  avatarId,
+  userDisplayName,
+  userEmail,
   actionError,
   sessionStatus = 'active',
   isCompletingSession = false,
@@ -156,9 +165,14 @@ export function ConversationScreenNew({
 
   const visibleAvatar = getConversationAvatarPresentation(
     country,
+    avatarId || undefined,
     partnerName || undefined,
     partnerRole || undefined
   );
+  const cupName =
+    userDisplayName?.trim() ||
+    userEmail?.split('@')[0]?.replace(/[._-]+/g, ' ').trim() ||
+    null;
   const languageLabel = languageCode ? getLanguageLabel(languageCode) : null;
   const focusCopy = getScenarioFocusCopy(scenarioSlug);
   const lastAvatarMessage = useMemo(
@@ -567,6 +581,7 @@ export function ConversationScreenNew({
                         portraitMotionClass={portraitMotionClass}
                         characterState={characterState}
                         recorderState={recorderState}
+                        cupName={cupName}
                       />
 
                       <div className="mx-auto mt-5 inline-flex items-center gap-2 rounded-full border border-orange-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 shadow-sm">
