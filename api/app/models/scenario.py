@@ -20,6 +20,7 @@ class Scenario(Base):
     vocabulary_hints: Mapped[str | None] = mapped_column(Text, nullable=True)
     partner_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
     partner_role: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    avatar_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     system_prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
 

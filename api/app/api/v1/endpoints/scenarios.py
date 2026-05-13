@@ -30,6 +30,7 @@ def list_country_scenarios(
             vocabulary_hints=scenario.vocabulary_hints,
             partner_name=scenario.partner_name,
             partner_role=scenario.partner_role,
+            avatar_id=scenario.avatar_id,
             is_active=scenario.is_active,
         )
         for scenario in scenarios
@@ -62,5 +63,6 @@ def get_scenario(
         vocabulary_hints=scenario.vocabulary_hints,
         partner_name=scenario.partner_name,
         partner_role=scenario.partner_role,
+        avatar_id=scenario.avatar_id,
         is_active=scenario.is_active,
     )

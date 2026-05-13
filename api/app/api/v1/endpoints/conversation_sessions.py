@@ -90,6 +90,7 @@ def list_my_conversation_sessions(
                 vocabulary_hints=scenario.vocabulary_hints if scenario else None,
                 partner_name=scenario.partner_name if scenario else None,
                 partner_role=scenario.partner_role if scenario else None,
+                avatar_id=scenario.avatar_id if scenario else None,
                 last_message_preview=last_message_preview,
                 has_feedback=session.feedback is not None,
                 started_at=session.started_at,
@@ -127,6 +128,7 @@ def get_conversation_session(
         vocabulary_hints=scenario.vocabulary_hints if scenario else None,
         partner_name=scenario.partner_name if scenario else None,
         partner_role=scenario.partner_role if scenario else None,
+        avatar_id=scenario.avatar_id if scenario else None,
         started_at=session.started_at,
         ended_at=session.ended_at,
     )
